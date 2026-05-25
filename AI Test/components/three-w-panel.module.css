@@ -1,0 +1,33 @@
+.tab {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  height: auto;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 120px;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.tabDefault {
+  background-color: #292c33;
+  border-top: 1px solid #3a3d43;
+  border-left: 1px solid #3a3d43;
+}
+
+.tabDefault:hover {
+  background-color: #292c33;
+  border-top: 1px solid #3a3d43;
+  border-left: 1px solid #3a3d43;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tabSelected {
+  background-color: #15161a;
+}

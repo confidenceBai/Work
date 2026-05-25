@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="12" fill="#292c33"/>
+  <rect x="30" y="30" width="140" height="140" rx="4" fill="#fcfcfc"/>
+  <!-- QR code placeholder pattern -->
+  <rect x="40" y="40" width="30" height="30" rx="2" fill="#1f2126"/>
+  <rect x="130" y="40" width="30" height="30" rx="2" fill="#1f2126"/>
+  <rect x="40" y="130" width="30" height="30" rx="2" fill="#1f2126"/>
+  <rect x="80" y="80" width="40" height="40" rx="2" fill="#1f2126"/>
+  <text x="100" y="105" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#636379">QR</text>
+</svg>

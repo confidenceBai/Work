@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Development artifacts
+.harness/
+docs/
+.claude/
+
+# Temp files
+.figma-screenshot.png
+
+# Internal docs
+PRODUCT.md

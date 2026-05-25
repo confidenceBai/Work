@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-04-30T00:00:00Z",
+  "title": "Design System: 白子煜 · Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "warm-interruption": {
+        "role": "primary",
+        "displayName": "Warm Interruption",
+        "canonical": "oklch(72% 0.17 14)",
+        "tonalRamp": ["#3d1212", "#5a1a1a", "#7a2424", "#a03232", "#c95454", "#FF9191", "#ffb5b5", "#ffd8d8"]
+      },
+      "sharp-annotation": {
+        "role": "secondary",
+        "displayName": "Sharp Annotation",
+        "canonical": "oklch(88% 0.17 101)",
+        "tonalRamp": ["#2b2e00", "#404700", "#5a6200", "#7a8600", "#a4af00", "#c8d400", "#DDE83F", "#ecf280"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "canonical": "oklch(99% 0.002 260)",
+        "tonalRamp": ["#111113", "#282a2d", "#3a3d43", "#5a5d66", "#808490", "#aeaebc", "#d4d4da", "#fcfcfc"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "canonical": "oklch(72% 0.015 265)",
+        "tonalRamp": ["#111113", "#282a2d", "#3a3d43", "#5a5d66", "#808490", "#aeaebc", "#d4d4da", "#fcfcfc"]
+      },
+      "text-dim": {
+        "role": "neutral",
+        "displayName": "Text Dim",
+        "canonical": "oklch(45% 0.015 268)",
+        "tonalRamp": ["#111113", "#282a2d", "#3a3d43", "#4a4d56", "#636379", "#8e8ea6", "#bdbdd4", "#eeeef8"]
+      },
+      "card-shell": {
+        "role": "neutral",
+        "displayName": "Card Shell",
+        "canonical": "oklch(16% 0.010 260)",
+        "tonalRamp": ["#0e0f10", "#15161a", "#1f2126", "#292c33", "#2e3138", "#3a3d43", "#4a4e58", "#636379"]
+      },
+      "stage-floor": {
+        "role": "neutral",
+        "displayName": "Stage Floor",
+        "canonical": "oklch(11% 0.008 260)",
+        "tonalRamp": ["#0e0f10", "#15161a", "#1f2126", "#292c33", "#2e3138", "#3a3d43", "#4a4e58", "#636379"]
+      },
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "oklch(7% 0.005 260)",
+        "tonalRamp": ["#0e0f10", "#15161a", "#1f2126", "#292c33", "#2e3138", "#3a3d43", "#4a4e58", "#636379"]
+      }
+    },
+    "shadows": [
+      {
+        "name": "hero-ambient",
+        "value": "0px 0.84px 0.5px -0.31px rgba(0,0,0,0.13), 0px 1.99px 1.19px -0.63px rgba(0,0,0,0.13), 0px 3.63px 2.18px -0.94px rgba(0,0,0,0.13), 0px 6.04px 3.62px -1.25px rgba(0,0,0,0.13), 0px 9.75px 5.85px -1.56px rgba(0,0,0,0.13), 0px 15.96px 9.57px -1.88px rgba(0,0,0,0.13), 0px 27.48px 16.49px -2.19px rgba(0,0,0,0.13), 0px 50px 30px -2.5px rgba(0,0,0,0.13)",
+        "purpose": "Permanent ambient depth on the hero card. 8-step negative-spread layers create a soft close penumbra. Applied once; never added as a hover response."
+      }
+    ],
+    "motion": [
+      {
+        "name": "spring-nav",
+        "value": "{ type: 'spring', stiffness: 300, damping: 30 }",
+        "purpose": "Navigation highlight position transitions. Physical weight, no bounce."
+      },
+      {
+        "name": "spring-parallax",
+        "value": "{ type: 'spring', stiffness: 120, damping: 18 }",
+        "purpose": "Floating showcase image cursor parallax. Softer spring for visual depth."
+      },
+      {
+        "name": "ease-state",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Ease-out-expo for opacity and scale state transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "desktop", "value": "1200px", "purpose": "Primary design target. Fixed-width hero card (480px)." },
+      { "name": "tablet", "value": "768px", "purpose": "Transition breakpoint. Floating images may collapse." },
+      { "name": "mobile", "value": "390px", "purpose": "Single-column. Hero card becomes fluid width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Floating Navigation Pill",
+      "kind": "nav",
+      "refersTo": "nav-pill",
+      "description": "Fixed bottom pill navigation with four icon items and a spring-animated position highlight.",
+      "html": "<nav class=\"ds-nav-pill\"><div class=\"ds-nav-highlight\"></div><a href=\"/\" class=\"ds-nav-item ds-nav-item--active\" title=\"主页\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"#fcfcfc\"><path d=\"M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48a16,16,0,0,1,21.66,0l80,75.48A16,16,0,0,1,224,115.55Z\"/></svg></a><a href=\"/work\" class=\"ds-nav-item\" title=\"项目\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"#aeaebc\"><path d=\"M197.58,129.06,146,178,166,198a16,16,0,0,1-22.63,22.63l-20-20-27.37,26.84A16,16,0,0,1,85,224H84.9A16,16,0,0,1,74,215.7L50.42,127.06a16,16,0,0,1,19.84-19.84L158,130.63,178,110.63a16,16,0,0,1,19.6,18.43ZM216,72a16,16,0,1,0-16-16A16,16,0,0,0,216,72Z\"/></svg></a><a href=\"/about-us\" class=\"ds-nav-item\" title=\"关于我\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"#aeaebc\"><path d=\"M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0C192.23,166.78,215.7,185.66,230.93,212A8,8,0,0,1,230.93,220Z\"/></svg></a><a href=\"/contact\" class=\"ds-nav-item\" title=\"与我联系\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 256 256\" fill=\"#aeaebc\"><path d=\"M116,208a12,12,0,0,1-12,12H48a20,20,0,0,1-20-20V96a20,20,0,0,1,20-20H204a20,20,0,0,1,20,20v48a12,12,0,0,1-24,0V100H52V196h52A12,12,0,0,1,116,208ZM232,172a36,36,0,1,1-36-36A36,36,0,0,1,232,172Zm-24,0a12,12,0,1,0-12,12A12,12,0,0,0,208,172Z\"/></svg></a></nav>",
+      "css": ".ds-nav-pill { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 50; background: #15161a; border-radius: 80px; border-top: 2px solid #1f2126; border-left: 2px solid #1f2126; border-right: 1px solid #1f2126; border-bottom: 1px solid #1f2126; padding: 8px; display: flex; flex-direction: row; gap: 4px; align-items: center; } .ds-nav-highlight { position: absolute; width: 48px; top: 8px; bottom: 8px; border-radius: 32px; background: #2e3138; border-top: 1px solid #3a3d43; border-left: 1px solid #3a3d43; border-right: 0; border-bottom: 0; left: 8px; transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav-item { position: relative; z-index: 1; width: 48px; height: 48px; border-radius: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; } .ds-nav-item:hover svg { fill: #fcfcfc; transition: fill 0.15s ease; } .ds-nav-item--active svg { fill: #fcfcfc; }"
+    },
+    {
+      "name": "Hero Card",
+      "kind": "card",
+      "refersTo": "hero-card",
+      "description": "Centered homepage article, solo stage presence, orbited by floating thumbnails.",
+      "html": "<article class=\"ds-hero-card\"><h1 class=\"ds-hero-h1\">Hi，我叫 <span class=\"ds-accent-warm\">白子煜</span> 有着 <span class=\"ds-accent-sharp\">四年工作经验</span> 的 UX 设计师一枚</h1></article>",
+      "css": ".ds-hero-card { width: 480px; border-radius: 24px; background: #1f2126; border-top: 1px solid #2e3138; border-left: 1px solid #2e3138; border-right: 0; border-bottom: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; box-shadow: 0px 0.84px 0.5px -0.31px rgba(0,0,0,0.13), 0px 1.99px 1.19px -0.63px rgba(0,0,0,0.13), 0px 3.63px 2.18px -0.94px rgba(0,0,0,0.13), 0px 6.04px 3.62px -1.25px rgba(0,0,0,0.13), 0px 9.75px 5.85px -1.56px rgba(0,0,0,0.13), 0px 15.96px 9.57px -1.88px rgba(0,0,0,0.13), 0px 27.48px 16.49px -2.19px rgba(0,0,0,0.13), 0px 50px 30px -2.5px rgba(0,0,0,0.13); } .ds-hero-h1 { font-family: system-ui, -apple-system, 'PingFang SC', 'Noto Sans SC', sans-serif; font-weight: 400; font-size: 28px; line-height: 1.2; text-align: center; color: #fcfcfc; margin: 0; text-wrap: balance; } .ds-accent-warm { font-weight: 500; color: #FF9191; } .ds-accent-sharp { font-weight: 400; color: #DDE83F; }"
+    },
+    {
+      "name": "Inline Icon Badge",
+      "kind": "custom",
+      "description": "Pill-shaped inline visual punctuation for embedding within headline text.",
+      "html": "<span class=\"ds-icon-badge\" style=\"transform: rotate(8deg)\"></span>",
+      "css": ".ds-icon-badge { display: inline-block; width: 32px; height: 24px; border-radius: 112px; overflow: hidden; background: #2e3138; border: 1px solid #3a3d43; vertical-align: middle; position: relative; margin-left: 4px; flex-shrink: 0; } .ds-icon-badge::after { content: ''; position: absolute; width: 13px; height: 35px; top: -30px; left: -50px; background: rgba(255, 255, 255, 0.53); transform: rotate(26deg); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Magic Canvas",
+    "overview": "A dark, unlit stage where the work is the only light source. The system doesn't announce itself — it recedes so each case study, each parallax thumbnail, each accent color pop commands full attention precisely when it appears. Nothing here is ambient decoration; every visible element was placed with a reason, and everything else was removed.\n\nThe aesthetic language is cool and deliberate: near-black surfaces in a tight blue-gray register, two surgical accent colors deployed with highlighter logic, and typography that mixes CJK warmth with Latin precision. The Warm Interruption (#FF9191) marks the person — their name, once. The Sharp Annotation (#DDE83F) marks a fact — years of experience, once. Both appear on the same screen and never again on any other. Their power is in scarcity.\n\nMotion is purposeful and physical. Showcase images respond to the cursor with parallax depth. The floating navigation indicator springs between positions with real weight. Everything else is still.",
+    "keyCharacteristics": [
+      "Near-monochrome deep dark stage, two precision accent interruptions only",
+      "Asymmetric top-left border chamfer on all card surfaces",
+      "Floating bottom pill navigation with spring-animated position indicator",
+      "Parallax-offset work thumbnails orbiting the hero content at clock positions",
+      "CJK-first typography (PingFang SC) paired with InterDisplay for Latin metadata",
+      "Zero decorative motion; all animation carries spatial or state information"
+    ],
+    "rules": [
+      { "name": "The Interruption Rule", "body": "Both accent colors appear exactly once per screen. Their scarcity is the mechanism — a third instance of either color anywhere on the same page is prohibited.", "section": "colors" },
+      { "name": "The Temperature Rule", "body": "All surfaces are blue-shifted grays. The only warmth in the system is Warm Interruption (#FF9191). Introducing warm surfaces violates the tonal contract the accent relies on.", "section": "colors" },
+      { "name": "The Two-Font Rule", "body": "Every typographic element uses exactly one of the two font families. PingFang SC for all prose, headings, and flowing text. InterDisplay for all metadata, labels, and technical strings. Never mix on the same line.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Shadows in this system are permanent ambient depth, not hover responses. Hover states use tonal background shifts. Never add a shadow as an interactive response.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep both accent colors to a single appearance per screen.",
+      "Do apply the asymmetric 1px top-left border to every card surface.",
+      "Do use InterDisplay exclusively for labels, year markers, keywords, and metadata.",
+      "Do allow work images to overflow their containers.",
+      "Do treat the floating bottom nav as the sole navigation element.",
+      "Do use spring transitions (stiffness 300, damping 30) for position-based state changes.",
+      "Do keep the page background at Stage Floor (#15161a) or Void (#0e0f10)."
+    ],
+    "donts": [
+      "Don't build a SaaS-style layout: no large hero + feature card grid + gradient backgrounds.",
+      "Don't use more than two accent colors on any single screen.",
+      "Don't add scroll-triggered animation sequences to every section.",
+      "Don't use templates that look like Behance default grid or Notion portfolio.",
+      "Don't introduce warm surfaces (beige, warm gray, cream, sand).",
+      "Don't write self-introduction copy that describes capabilities at length.",
+      "Don't apply shadows as hover state responses.",
+      "Don't use border-left as a colored stripe accent — the asymmetric border is always top-left simultaneously."
+    ]
+  }
+}

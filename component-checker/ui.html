@@ -1,0 +1,3783 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Checker</title>
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --bg:         var(--figma-color-bg, #ffffff);
+      --bg-2:       var(--figma-color-bg-secondary, #f5f5f5);
+      --bg-hover:   var(--figma-color-bg-hover, #ebebeb);
+      --text:       var(--figma-color-text, #1a1a1a);
+      --text-2:     var(--figma-color-text-secondary, #777777);
+      --text-off:   var(--figma-color-text-disabled, #b3b3b3);
+      --border:     var(--figma-color-border, #e5e5e5);
+      --border-hi:  var(--figma-color-border-strong, #c4c4c4);
+      --brand:      var(--figma-color-bg-brand, #0c8ce9);
+      --on-brand:   var(--figma-color-text-onbrand, #ffffff);
+      --text-brand: var(--figma-color-text-brand, #0c8ce9);
+      --danger:     var(--figma-color-text-danger, #f24822);
+      --danger-bg:  var(--figma-color-bg-danger-tertiary, #fff0ec);
+      --success:    var(--figma-color-text-success, #1bc47d);
+      --success-bg: var(--figma-color-bg-success-tertiary, #e8faf2);
+
+      --r-sm: 4px;
+      --r-md: 6px;
+      --r-lg: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      font-size: 13px;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Layout ── */
+    .sticky-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex: 0 0 auto;
+      z-index: 100;
+    }
+
+    #results-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 12px 12px 16px;
+    }
+
+    /* ── Tab strip ── */
+    .tab-strip {
+      display: flex;
+      align-items: flex-end;
+      padding: 8px 12px 0;
+      gap: 2px;
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      padding: 6px 10px 7px;
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--text-2);
+      cursor: pointer;
+      border-radius: var(--r-sm) var(--r-sm) 0 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      width: auto;
+      margin-top: 0;
+      line-height: 1.4;
+    }
+    .tab:hover { color: var(--text); background: none; }
+    .tab--active {
+      color: var(--text);
+      font-weight: 500;
+      border-bottom-color: var(--text-brand);
+    }
+
+    .tab-strip__gap { flex: 1; }
+
+    /* ── Icon button ── */
+    .icon-btn {
+      background: none;
+      border: none;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--r-md);
+      cursor: pointer;
+      color: var(--text-2);
+      padding: 0;
+      margin: 0;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+    .icon-btn svg { display: block; }
+
+    /* ── Tooltip ── */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: var(--r-sm);
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 500;
+    }
+    [data-tooltip]:hover::after { opacity: 1; }
+
+    /* ── Action rows ── */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px 10px;
+    }
+    .action-row--hidden { display: none; }
+
+    /* ── Buttons ── */
+    .btn {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--r-md);
+      cursor: pointer;
+      padding: 0 14px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s, background 0.15s;
+      white-space: nowrap;
+      position: relative;
+      width: auto;
+      margin: 0;
+    }
+    .btn--primary {
+      background: var(--brand);
+      color: var(--on-brand);
+      flex: 1;
+    }
+    .btn--primary:hover { opacity: 0.88; }
+    .btn--primary:disabled { opacity: 0.42; cursor: not-allowed; }
+
+    .btn--secondary {
+      background: var(--bg-2);
+      color: var(--text);
+      flex: 1;
+      border: 1px solid var(--border);
+    }
+    .btn--secondary:hover { background: var(--bg-hover); }
+
+    .btn--ai {
+      background: #7c5af0;
+      color: #fff;
+    }
+    .btn--ai:hover { background: #6a49d9; }
+    .btn--ai:disabled { opacity: 0.42; cursor: not-allowed; }
+
+    /* Loading spinner */
+    .btn.loading { pointer-events: none; }
+    .btn.loading .btn-text { opacity: 0; }
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Progress ── */
+    .progress-bar { padding: 0 12px 8px; min-height: 18px; }
+    .progress-text { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+    .api-status { font-size: 11px; color: var(--text-2); padding: 0 12px 8px; display: none; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      background: #fafafa;
+    }
+
+    .card__name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-brand);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font);
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+      height: auto;
+      margin: 0;
+      width: auto;
+      border-radius: 0;
+    }
+    .card__name:hover { text-decoration: underline; background: none; opacity: 1; }
+
+    .card__jump {
+      background: none;
+      border: none;
+      font-size: 11px;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin: 0;
+      height: auto;
+      width: auto;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .card__jump:hover { background: var(--bg-hover); color: var(--text); }
+    .card__jump svg { display: block; }
+
+    .card__body { padding: 4px 0; }
+
+    /* ── Issue rows ── */
+    .issue-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 12px;
+    }
+    .issue-row:hover { background: var(--bg-2); }
+
+    .issue-row__icon {
+      font-size: 11px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      line-height: 1.5;
+      width: 14px;
+      text-align: center;
+    }
+
+    .issue-row__text {
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--danger);
+      min-width: 0;
+    }
+    .issue-row--pass .issue-row__text { color: var(--success); }
+
+    .issue-row__fix {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--border-hi);
+      color: var(--text-2);
+      font-size: 11px;
+      font-family: var(--font);
+      padding: 1px 8px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      margin: 0;
+      height: auto;
+      width: auto;
+      transition: border-color 0.15s, color 0.15s;
+      line-height: 1.6;
+    }
+    .issue-row__fix:hover {
+      border-color: var(--text-brand);
+      color: var(--text-brand);
+      background: none;
+    }
+
+    /* ── Rename form ── */
+    .rename-form {
+      display: none;
+      padding: 4px 12px 8px 34px;
+      gap: 6px;
+    }
+    .rename-form.open { display: flex; }
+    .rename-form input {
+      flex: 1;
+      height: 26px;
+      padding: 0 8px;
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-sm);
+      font-family: var(--font);
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    .rename-form input:focus { border-color: var(--text-brand); }
+    .rename-form .btn--confirm-sm {
+      height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      background: var(--brand);
+      color: var(--on-brand);
+      border: none;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-family: var(--font);
+      flex-shrink: 0;
+      width: auto;
+      margin: 0;
+      transition: opacity 0.15s;
+    }
+    .rename-form .btn--confirm-sm:hover { opacity: 0.88; }
+
+    /* ── AI result card ── */
+    .ai-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .ai-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+
+    .ai-card__name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-brand);
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ai-card__name:hover { text-decoration: underline; }
+
+    .ai-card__body {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+    }
+
+    .ai-card__thumb {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--bg-2);
+      flex-shrink: 0;
+    }
+
+    .ai-card__desc {
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--text);
+      flex: 1;
+    }
+
+    /* ── AI pending / error card ── */
+    .ai-card__status {
+      padding: 12px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+    .ai-card__error-msg { font-size: 12px; color: var(--danger); margin-bottom: 4px; }
+    .ai-card__error-hint { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+    .ai-card__retry {
+      font-size: 12px;
+      padding: 3px 10px;
+      background: var(--brand);
+      color: var(--on-brand);
+      border: none;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-family: var(--font);
+      margin: 0;
+      width: auto;
+      height: auto;
+      transition: opacity 0.15s;
+    }
+    .ai-card__retry:hover { opacity: 0.88; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      color: var(--text-2);
+      text-align: center;
+      gap: 6px;
+    }
+    .empty-state__icon { font-size: 28px; opacity: 0.35; margin-bottom: 4px; }
+    .empty-state__title { font-size: 13px; font-weight: 500; color: var(--text); }
+    .empty-state__sub { font-size: 12px; color: var(--text-2); }
+
+    /* ── Hidden utility ── */
+    .hidden { display: none; }
+
+    #fix-all-bar {
+      flex: 0 0 auto;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .btn--full { width: 100%; }
+
+    .fix-all-info {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      position: relative;
+    }
+    .fix-all-info svg { display: block; }
+    .fix-all-info[data-tooltip]::after {
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    }
+
+    .modal--fill-rule {
+      width: 480px;
+      height: 650px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+      flex-shrink: 0;
+    }
+
+    .modal__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .modal__close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-2);
+      font-size: 14px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--r-sm);
+      margin: 0;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal__close:hover { background: var(--bg-hover); color: var(--text); }
+
+    .modal__body { flex: 1; min-height: 0; position: relative; }
+
+    .modal__footer {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── API key modal ── */
+    .modal--api-key { width: 440px; }
+
+    .form-field { padding: 16px 20px 12px; }
+    .form-label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+    .form-input {
+      width: 100%;
+      height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-md);
+      font-family: var(--font);
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--text-brand); }
+    .form-link {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-brand);
+      text-decoration: none;
+    }
+    .form-error { display: none; font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+    .modal-footer-btns {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 20px 20px;
+    }
+
+    .btn--ghost {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border-hi);
+      height: 30px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-family: var(--font);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      margin: 0;
+      width: auto;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn--ghost:hover { border-color: var(--text-brand); color: var(--text-brand); }
+
+    .btn--confirm {
+      background: var(--brand);
+      color: var(--on-brand);
+      border: none;
+      height: 30px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-family: var(--font);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      margin: 0;
+      width: auto;
+      transition: opacity 0.15s;
+    }
+    .btn--confirm:hover { opacity: 0.88; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      background: var(--success);
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: var(--r-md);
+      font-size: 12px;
+      z-index: 2000;
+      pointer-events: none;
+      animation: toast-in 0.18s ease forwards, toast-out 0.18s ease 1.82s forwards;
+    }
+    .toast--error { background: var(--danger); }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    /* ── Spec tab ── */
+    #spec-results-area {
+      margin: -12px -12px -16px;
+    }
+    .spec-chat {
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .spec-status {
+      font-size: 12px;
+      color: var(--text-2);
+      padding: 2px 0;
+    }
+    .spec-status--error { color: var(--danger); }
+    .spec-loading-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 0;
+      color: var(--text-2);
+      font-size: 12px;
+    }
+    .spec-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border-hi);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    /* ── Spec chat wall ── */
+    .spec-chat-wall {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+    }
+    .spec-bubble {
+      max-width: 90%;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .spec-bubble--user {
+      align-self: flex-end;
+      background: var(--brand);
+      color: var(--on-brand);
+      border-bottom-right-radius: 4px;
+    }
+    .spec-bubble--assistant {
+      align-self: flex-start;
+      background: var(--bg-2);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .spec-bubble__md h2 { font-size: 12px; font-weight: 600; margin: 10px 0 4px; color: var(--text); }
+    .spec-bubble__md h2:first-child { margin-top: 2px; }
+    .spec-bubble__md h3 { font-size: 11px; font-weight: 600; margin: 8px 0 4px; color: var(--text); }
+    .spec-bubble__md p  { margin: 3px 0; }
+    .spec-bubble__md ul, .spec-bubble__md ol { padding-left: 16px; margin: 3px 0; }
+    .spec-bubble__md li { margin: 2px 0; }
+    .spec-bubble__md strong { font-weight: 600; }
+    .spec-bubble__md table { border-collapse: collapse; width: 100%; font-size: 11px; margin: 4px 0; }
+    .spec-bubble__md th, .spec-bubble__md td {
+      border: 1px solid var(--border); padding: 3px 6px; text-align: left;
+    }
+    .spec-bubble__md th { background: var(--bg-2); font-weight: 600; }
+    .spec-bubble--streaming .spec-bubble__md::after {
+      content: '▋';
+      animation: spec-blink 0.8s step-end infinite;
+      margin-left: 2px;
+      opacity: 0.7;
+    }
+    @keyframes spec-blink { 50% { opacity: 0; } }
+
+    /* ── Spec Composer (bottom-docked chat input) ── */
+    .spec-composer {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      padding: 8px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .spec-composer.hidden { display: none; }
+    .spec-composer__chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .spec-composer__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      cursor: default;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .spec-composer__chip.hidden { display: none; }
+    .spec-composer__chip--component.has-component {
+      border-color: var(--text-brand);
+      color: var(--text-brand);
+      background: rgba(12, 140, 233, 0.06);
+      font-weight: 500;
+    }
+    .spec-composer__chip--kb {
+      cursor: pointer;
+      border: none;
+      background: var(--bg-2);
+      font-family: var(--font);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      transition: background 0.15s;
+    }
+    .spec-composer__chip--kb:hover { background: var(--bg-hover); }
+    .spec-composer__chip-meta {
+      font-weight: 400;
+      color: var(--text-2);
+      font-size: 10px;
+    }
+    .spec-composer__kb-count {
+      background: var(--brand);
+      color: var(--on-brand);
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 14px;
+      height: 14px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      line-height: 1;
+    }
+    .spec-composer__kb-count.hidden { display: none; }
+    .spec-composer__input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 6px 6px 6px 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .spec-composer__input-row:focus-within {
+      border-color: var(--text-brand);
+      box-shadow: 0 0 0 2px rgba(12, 140, 233, 0.1);
+    }
+    .spec-composer__textarea {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font);
+      font-size: 13px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      line-height: 1.4;
+      resize: none;
+      padding: 4px 0;
+      min-height: 22px;
+      max-height: 120px;
+      overflow-y: auto;
+      outline: none;
+    }
+    .spec-composer__textarea::placeholder { color: var(--text-off); }
+    .spec-composer__actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .spec-composer__action-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: var(--font);
+      padding: 0;
+    }
+    .spec-composer__action-btn--submit {
+      background: var(--brand);
+      color: var(--on-brand);
+      gap: 3px;
+      width: auto;
+      padding: 0 10px;
+      border-radius: 14px;
+      height: 28px;
+      font-size: 12px;
+      font-weight: 500;
+      position: relative;
+    }
+    .spec-composer__action-btn--submit:hover { opacity: 0.88; }
+    .spec-composer__action-btn--submit:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .spec-composer__action-btn--submit.loading .spec-composer__submit-label,
+    .spec-composer__action-btn--submit.loading .spec-composer__icon-sparkle { opacity: 0; }
+    .spec-composer__action-btn--submit.loading::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.7s linear infinite;
+    }
+    .spec-composer__action-btn--write {
+      background: var(--bg-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .spec-composer__action-btn--write:hover {
+      border-color: var(--text-brand);
+      color: var(--text-brand);
+    }
+    .spec-composer__action-btn--write.hidden { display: none; }
+    .spec-composer__submit-label { font-size: 12px; }
+    .spec-preview {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      font-size: 12px;
+      margin-top: 6px;
+      width: 100%;
+    }
+    .spec-preview__section { border-bottom: 1px solid var(--border); }
+    .spec-preview__section:last-child { border-bottom: none; }
+    .spec-preview__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      cursor: pointer;
+      background: var(--bg-2);
+      font-weight: 500;
+      font-size: 12px;
+      user-select: none;
+    }
+    .spec-preview__header:hover { background: var(--bg-hover); }
+    .spec-preview__body {
+      padding: 8px 10px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 12px;
+      background: var(--bg);
+    }
+    .spec-preview__body.hidden { display: none; }
+    .spec-preview__chevron { font-size: 10px; color: var(--text-2); transition: transform 0.15s; }
+    .spec-preview__header.open .spec-preview__chevron { transform: rotate(90deg); }
+    /* ── Spec Composer (底部对话框) ── */
+    .spec-composer {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      padding: 8px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .spec-composer.hidden { display: none; }
+    .spec-composer__chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .spec-composer__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .spec-composer__chip--component.has-component {
+      border-color: var(--text-brand);
+      color: var(--text-brand);
+      background: rgba(12, 140, 233, 0.06);
+      font-weight: 500;
+    }
+    .spec-composer__chip--kb {
+      cursor: pointer;
+      border: none;
+      font-family: var(--font);
+      transition: background 0.15s;
+    }
+    .spec-composer__chip--kb:hover { background: var(--bg-hover); }
+    .spec-composer__chip-meta {
+      color: var(--text-2);
+      font-size: 10px;
+      font-weight: 400;
+    }
+    .spec-composer__kb-count {
+      background: var(--brand);
+      color: var(--on-brand);
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 14px;
+      height: 14px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      line-height: 1;
+    }
+    .spec-composer__kb-count.hidden { display: none; }
+    .spec-composer__input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 6px 6px 6px 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--bg);
+    }
+    .spec-composer__input-row:focus-within {
+      border-color: var(--text-brand);
+      box-shadow: 0 0 0 2px rgba(12, 140, 233, 0.1);
+    }
+    .spec-composer__textarea {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font);
+      font-size: 13px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      line-height: 1.4;
+      resize: none;
+      padding: 4px 0;
+      min-height: 22px;
+      max-height: 120px;
+      overflow-y: auto;
+      outline: none;
+    }
+    .spec-composer__textarea::placeholder { color: var(--text-off); }
+    .spec-composer__actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .spec-composer__action-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: var(--font);
+      padding: 0;
+    }
+    .spec-composer__action-btn--send {
+      background: var(--brand);
+      color: var(--on-brand);
+      gap: 3px;
+      width: auto;
+      padding: 0 10px;
+      border-radius: 14px;
+      height: 28px;
+      font-size: 12px;
+      font-weight: 500;
+      position: relative;
+    }
+    .spec-composer__action-btn--send:hover { opacity: 0.88; }
+    .spec-composer__action-btn--send:disabled { opacity: 0.4; cursor: not-allowed; }
+    .spec-composer__action-btn--write {
+      background: var(--bg-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .spec-composer__action-btn--write:hover { border-color: var(--text-brand); color: var(--text-brand); }
+    .spec-composer__action-btn--write.hidden { display: none; }
+    /* KB modal */
+    .kb-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 300;
+    }
+    .kb-modal-overlay.hidden { display: none; }
+    .kb-modal {
+      background: var(--bg);
+      border-radius: var(--r-lg);
+      width: 460px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .kb-modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .kb-modal__title { font-weight: 600; font-size: 14px; }
+    .kb-modal__close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-2); font-size: 16px; padding: 2px 6px;
+    }
+    .kb-modal__body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .kb-modal__footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+    .kb-file-list { display: flex; flex-direction: column; gap: 6px; }
+    .kb-file-item {
+      display: flex; align-items: center;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      gap: 8px;
+      font-size: 12px;
+    }
+    .kb-file-item__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-file-item__size { color: var(--text-2); font-size: 11px; flex-shrink: 0; }
+    .kb-file-item__del {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-2); font-size: 14px; padding: 0 4px;
+      flex-shrink: 0;
+    }
+    .kb-file-item__del:hover { color: var(--danger); }
+    .kb-empty { color: var(--text-2); font-size: 12px; text-align: center; padding: 24px 0; }
+    .kb-progress { font-size: 11px; color: var(--text-2); padding: 4px 0; }
+    /* ── Context Preview Modal ── */
+    .ctx-modal {
+      width: 460px;
+      max-height: 82vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .ctx-modal__body { flex: 1; overflow-y: auto; padding: 0; }
+    .ctx-section { border-bottom: 1px solid var(--border); }
+    .ctx-section:last-child { border-bottom: none; }
+    .ctx-section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--bg-2);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .ctx-section__header:hover { background: var(--bg-hover); }
+    .ctx-section__chevron { font-size: 9px; color: var(--text-2); transition: transform 0.15s; }
+    .ctx-section__header.open .ctx-section__chevron { transform: rotate(90deg); }
+    .ctx-section__body { padding: 10px 14px; }
+    .ctx-section__body.hidden { display: none; }
+    .ctx-img-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .ctx-thumb { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ctx-thumb img {
+      max-height: 80px; max-width: 180px;
+      border: 1px solid var(--border); border-radius: var(--r-sm);
+      object-fit: contain; background: #f0f0f0;
+    }
+    .ctx-thumb__label { font-size: 10px; color: var(--text-2); }
+    .ctx-pre {
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 10.5px; line-height: 1.5;
+      white-space: pre-wrap; word-break: break-all;
+      color: var(--text);
+      max-height: 180px; overflow-y: auto;
+      background: var(--bg-2); padding: 8px 10px;
+      border-radius: var(--r-sm); border: 1px solid var(--border);
+      margin: 0;
+    }
+    .ctx-empty { color: var(--text-2); font-size: 11px; font-style: italic; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+</head>
+<body>
+
+<div class="sticky-header">
+  <!-- Tab strip -->
+  <div class="tab-strip">
+    <button class="tab tab--active" data-tab="check" id="tab-check">规范检查</button>
+    <button class="tab" data-tab="ai" id="tab-ai">AI 描述</button>
+    <button class="tab" data-tab="spec" id="tab-spec">设计规范</button>
+    <div class="tab-strip__gap"></div>
+    <button class="icon-btn" id="apiKeyBtn" data-tooltip="管理 API 密钥" aria-label="管理API密钥">
+      <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 31C27.866 31 31 27.866 31 24C31 20.134 27.866 17 24 17C20.134 17 17 20.134 17 24C17 27.866 20.134 31 24 31ZM28 24C28 26.2091 26.2091 28 24 28C21.7909 28 20 26.2091 20 24C20 21.7909 21.7909 20 24 20C26.2091 20 28 21.7909 28 24Z" fill="currentColor"/>
+        <path d="M31.541 43C33.6821 43 35.6609 41.8591 36.7336 40.0061L44.2597 27.0061C45.3363 25.1466 45.3363 22.8534 44.2597 20.9938L36.7336 7.99385C35.6609 6.14091 33.6821 5 31.541 5H16.4596C14.3186 5 12.3398 6.14086 11.267 7.99374L3.74057 20.9937C2.66395 22.8533 2.66395 25.1467 3.74057 27.0063L11.267 40.0063C12.3398 41.8591 14.3186 43 16.4596 43H31.541ZM41.6634 25.5031L34.1373 38.5031C33.601 39.4295 32.6116 40 31.541 40H16.4596C15.3891 40 14.3997 39.4296 13.8633 38.5031L6.33684 25.5031C5.79853 24.5733 5.79853 23.4267 6.33684 22.4969L13.8633 9.49687C14.3997 8.57043 15.3891 8 16.4596 8H31.541C32.6116 8 33.601 8.57045 34.1373 9.49692L41.6634 22.4969C42.2017 23.4267 42.2017 24.5733 41.6634 25.5031Z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Action row: Check -->
+  <div class="action-row" id="check-action-row">
+    <button id="check" class="btn btn--primary">
+      <span class="btn-text">检查图标规范</span>
+    </button>
+    <button id="outline" class="btn btn--secondary">
+      <span class="btn-text">轮廓化图标</span>
+    </button>
+  </div>
+
+
+  <!-- Action row: AI -->
+  <div class="action-row action-row--hidden" id="ai-action-row">
+    <button id="description" class="btn btn--ai btn--primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+        <path d="M9 6.3c.2-.5.8-.5 1 0l1.7 4.1c.06.14.17.25.3.3L16.2 12c.5.2.5.8 0 1l-4.2 1.7a.5.5 0 0 0-.3.3L10 19.2c-.2.5-.8.5-1 0l-1.7-4.2a.5.5 0 0 0-.3-.3L2.8 13c-.5-.2-.5-.8 0-1L7 10.3a.5.5 0 0 0 .3-.3L9 6.3zM18.2 3c.1-.25.4-.25.5 0l.9 2.1c.03.07.08.12.15.15L22 6.2c.25.1.25.4 0 .5l-2.15.9c-.07.03-.12.08-.15.15L18.8 10c-.1.25-.4.25-.5 0l-.9-2.25c-.03-.07-.08-.12-.15-.15L15 6.7c-.25-.1-.25-.4 0-.5l2.25-.9c.07-.03.12-.08.15-.15L18.2 3z" fill="currentColor"/>
+      </svg>
+      <span class="btn-text">生成 AI 描述</span>
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar">
+    <div id="progress-indicator" class="progress-text"></div>
+  </div>
+  <div id="api-status" class="api-status"></div>
+</div>
+
+<div id="results-container">
+  <!-- Check results -->
+  <div id="check-results-area">
+    <div id="results">
+      <div class="empty-state" id="check-empty">
+        <div class="empty-state__icon">🔍</div>
+        <div class="empty-state__title">选中图标后开始检查</div>
+        <div class="empty-state__sub">在画布中选择一个或多个图标组件</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI results -->
+  <div id="ai-results-area" class="hidden">
+    <div id="ai-results">
+      <div class="empty-state" id="ai-empty">
+        <div class="empty-state__icon">✨</div>
+        <div class="empty-state__title">选中图标后生成描述</div>
+        <div class="empty-state__sub">需要先在右上角配置 AthenAI API 密钥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spec tab content -->
+  <div id="spec-results-area" class="hidden">
+    <div id="spec-output" class="spec-chat-wall"></div>
+    <div id="spec-empty" class="empty-state">
+      <div class="empty-state__icon">📐</div>
+      <div class="empty-state__title">选中 Figma 组件开始生成</div>
+      <div class="empty-state__sub">在 Figma 画布中选中一个组件<br>然后描述需求并发送</div>
+    </div>
+  </div>
+</div>
+
+<!-- Spec composer (底部对话框) -->
+<div id="spec-composer" class="spec-composer hidden">
+  <div class="spec-composer__chips">
+    <div id="spec-composer-component" class="spec-composer__chip spec-composer__chip--component">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="spec-composer-component-name">未选中组件</span><span id="spec-composer-component-meta" class="spec-composer__chip-meta"></span>
+    </div>
+    <button id="spec-composer-kb-btn" class="spec-composer__chip spec-composer__chip--kb" data-tooltip="知识库管理">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+        <rect x="3" y="4" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="3" y="10" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="3" y="16" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <span>知识库</span>
+      <span id="spec-composer-kb-count" class="spec-composer__kb-count hidden">0</span>
+    </button>
+  </div>
+  <div class="spec-composer__input-row">
+    <textarea id="spec-composer-input" class="spec-composer__textarea" placeholder="描述你的需求..." rows="1"></textarea>
+    <div class="spec-composer__actions">
+      <button id="spec-composer-write-btn" class="spec-composer__action-btn spec-composer__action-btn--write hidden" data-tooltip="写入 Figma">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button id="spec-composer-send-btn" class="spec-composer__action-btn spec-composer__action-btn--send" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+          <path d="M9 6.3c.2-.5.8-.5 1 0l1.7 4.1c.06.14.17.25.3.3L16.2 12c.5.2.5.8 0 1l-4.2 1.7a.5.5 0 0 0-.3.3L10 19.2c-.2.5-.8.5-1 0l-1.7-4.2a.5.5 0 0 0-.3-.3L2.8 13c-.5-.2-.5-.8 0-1L7 10.3a.5.5 0 0 0 .3-.3L9 6.3z" fill="currentColor"/>
+        </svg>
+        <span class="spec-composer__send-label">发送</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Fix-all bar -->
+<div id="fix-all-bar" class="hidden">
+  <button id="fix-all-btn" class="btn btn--primary btn--full">
+    <span class="btn-text">一键修复</span>
+    <span class="fix-all-info" data-tooltip="一键修复不包含填充规则问题，需手动修复" aria-label="说明">
+      <svg width="14" height="14" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 14C24.8284 14 25.5 14.6716 25.5 15.5V25.5C25.5 26.3284 24.8284 27 24 27C23.1716 27 22.5 26.3284 22.5 25.5V15.5C22.5 14.6716 23.1716 14 24 14Z" fill="currentColor"/>
+        <path d="M24 34C25.1046 34 26 33.1046 26 32C26 30.8954 25.1046 30 24 30C22.8954 30 22 30.8954 22 32C22 33.1046 22.8954 34 24 34Z" fill="currentColor"/>
+        <path d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44ZM24 41C14.6112 41 7 33.3888 7 24C7 14.6112 14.6112 7 24 7C33.3888 7 41 14.6112 41 24C41 33.3888 33.3888 41 24 41Z" fill="currentColor"/>
+      </svg>
+    </span>
+  </button>
+</div>
+
+<!-- Fill rule modal -->
+<div id="fill-rule-modal" class="modal-overlay">
+  <div class="modal modal--fill-rule">
+    <div class="modal__header">
+      <h3 class="modal__title">填充规则编辑器</h3>
+      <button class="modal__close" id="fill-rule-close">✕</button>
+    </div>
+    <div class="modal__body">
+      <canvas id="fill-rule-canvas" style="width:100%;height:100%;cursor:default;display:block;"></canvas>
+    </div>
+    <div class="modal__footer">
+      <button class="btn--confirm" id="fill-rule-apply">应用</button>
+      <button class="btn--ghost" id="fill-rule-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- API key modal -->
+<div id="api-key-modal" class="modal-overlay">
+  <div class="modal modal--api-key">
+    <div class="modal__header">
+      <h3 class="modal__title">设置 AthenAI API 密钥</h3>
+      <button class="modal__close" id="api-key-close">✕</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="api-key-input">API 密钥</label>
+      <input id="api-key-input" type="password" class="form-input" placeholder="请输入以 sk- 开头的密钥">
+      <div id="api-key-error" class="form-error"></div>
+    </div>
+    <div class="modal-footer-btns">
+      <button id="api-key-cancel" class="btn--ghost">取消</button>
+      <button id="api-key-save" class="btn--confirm">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- KB management modal -->
+<div id="kb-modal" class="kb-modal-overlay hidden">
+  <div class="kb-modal">
+    <div class="kb-modal__header">
+      <span class="kb-modal__title">知识库管理</span>
+      <button class="kb-modal__close" id="kb-modal-close">&times;</button>
+    </div>
+    <div class="kb-modal__body">
+      <div id="kb-file-list" class="kb-file-list"></div>
+      <div id="kb-empty" class="kb-empty">暂无文件，点击下方按钮导入</div>
+      <div id="kb-progress" class="kb-progress" style="display:none;"></div>
+    </div>
+    <div class="kb-modal__footer">
+      <label class="btn btn--primary" style="cursor:pointer;font-size:12px;padding:4px 12px;">
+        导入文件
+        <input type="file" id="kb-file-input" multiple accept=".md,.json" style="display:none;">
+      </label>
+      <label class="btn btn--secondary" style="cursor:pointer;font-size:12px;padding:4px 12px;">
+        导入文件夹
+        <input type="file" id="kb-folder-input" webkitdirectory style="display:none;">
+      </label>
+      <span id="kb-total-size" style="font-size:11px;color:var(--text-2);margin-left:auto;align-self:center;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Context Preview Modal -->
+<div id="ctx-preview-modal" class="modal-overlay">
+  <div class="modal ctx-modal">
+    <div class="modal__header">
+      <h3 class="modal__title">发送前预览上下文</h3>
+      <button class="modal__close" id="ctx-preview-close">✕</button>
+    </div>
+    <div class="modal__body ctx-modal__body" id="ctx-preview-body"></div>
+    <div class="modal__footer">
+      <button class="btn--ghost" id="ctx-preview-cancel">返回调整</button>
+      <button class="btn--confirm" id="ctx-preview-confirm">确认发送</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Markdown renderer (marked + DOMPurify) ──
+  marked.use({ breaks: true });
+  function renderMarkdown(md) {
+    return DOMPurify.sanitize(marked.parse(md || ''));
+  }
+
+  // ── Debug ──
+  const DEBUG = false;
+  function log(...a) { if (DEBUG) console.log(...a); }
+  function logError(...a) { if (DEBUG) console.error(...a); }
+
+  // ── Fix-all state ──
+  let currentCheckResults = [];
+  let nodeImagesResolver = null;
+
+  // ── Retry data store (avoids embedding imageData/nodeId in onclick attributes) ──
+  let retryIdCounter = 0;
+  const retryDataStore = new Map();
+
+  function storeRetryData(nodeId, iconName, imageData) {
+    const key = 'r' + (++retryIdCounter);
+    retryDataStore.set(key, { nodeId, iconName, imageData });
+    return key;
+  }
+
+  function retryFromStore(key) {
+    const data = retryDataStore.get(key);
+    if (!data) return;
+    updateApiStatusDisplay();
+    analyzeImage(data.imageData, data.nodeId, data.iconName, 0);
+  }
+
+  // ── Tab switching ──
+  let currentTab = 'check';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-check').classList.toggle('tab--active', tab === 'check');
+    document.getElementById('tab-ai').classList.toggle('tab--active', tab === 'ai');
+    document.getElementById('tab-spec').classList.toggle('tab--active', tab === 'spec');
+    document.getElementById('check-action-row').classList.toggle('action-row--hidden', tab !== 'check');
+    document.getElementById('ai-action-row').classList.toggle('action-row--hidden', tab !== 'ai');
+    document.getElementById('check-results-area').classList.toggle('hidden', tab !== 'check');
+    document.getElementById('ai-results-area').classList.toggle('hidden', tab !== 'ai');
+    document.getElementById('spec-results-area').classList.toggle('hidden', tab !== 'spec');
+    document.getElementById('spec-composer').classList.toggle('hidden', tab !== 'spec');
+    const bar = document.getElementById('fix-all-bar');
+    const hasFixable = currentCheckResults.some(r => r.issues && r.issues.length > 0);
+    bar.classList.toggle('hidden', tab !== 'check' || !hasFixable);
+    document.getElementById('spec-composer').classList.toggle('hidden', tab !== 'spec');
+    if (tab === 'spec') refreshComponentInfo();
+  }
+
+  // ── Spec tab: state ──
+  let specMessages = [];
+  let latestSpecMarkdown = null;
+  let specComponentData = null;
+  let specIsSending = false;
+  let pendingContextBlocks = null;
+  let pendingUserText = null;
+
+  const SPEC_SYSTEM_PROMPT_MD = '你是一名专业的 UI 设计规范文档专家，负责为 Figma 组件生成供设计师阅读的标准设计规范。\n\n请使用以下结构化 Markdown 格式输出，章节顺序固定，不允许遗漏（无内容的章节可写"无"）：\n\n## 组件概述\n[2-3 句：组件的设计用途、典型出现位置、核心视觉特征]\n\n## Props\n| 属性 | 类型 | 默认值 | 说明 |\n|------|------|--------|------|\n\n## 构成\n- **角色名**（必需/可选）：[视觉角色说明，含位置关系和设计意图]\n\n## 颜色规范\n| 层级 | Token | Hex | 用途 |\n|------|-------|-----|------|\n\n## 变体与用法\n| 类型 | 视觉特征 | 典型使用场景 |\n|------|----------|---------------|\n\n## 交互状态\n**状态**：[逐一列出，含视觉变化描述]\n**行为**：[操作触发的视觉/动效响应]\n**边界条件**：[异常或极限情况下的呈现方式]\n\n## 显示规则\n- [具体规则：何时显示、何时隐藏，及其优先级]\n\n## 内容规则\n| 字段 | 默认值 | 显示规则 | 截断处理 |\n|------|--------|----------|----------|\n\n规则：\n1. 使用中文，面向 Figma 设计师；描述聚焦「视觉表现」和「设计意图」，避免罗列技术属性值；每个章节篇幅简洁，优先表格和列表，减少大段散文。\n2. 构成角色名使用语义化中文（如：容器、标题区、图标区），禁止使用 Figma 图层原始名称（如 Frame 123、Group 1）。构成各项说明需体现该部件的视觉功能定位（如：承载主操作的 CTA 区域、辅助信息的副标题行）。\n3. 若知识库中有相关规范，交互状态优先引用知识库内容，不得忽略。\n4. 若组件无颜色层级变体，颜色规范章节写"无"。\n5. 若组件信息中包含「预提取构成项」，构成章节必须严格按该列表的顺序和数量逐项输出（禁止增删条目、不得分组）。每项 originalLayer 为 Figma 原始图层名（只读参考），根据它推断 UI 设计角色，用语义化中文命名（如：关闭图标、用户头像、主操作按钮）作为角色名，再补充说明文字。\n6. 变体「视觉特征」列需体现视觉区分维度（如色调深浅、密度高低、信息层级），不得只写"简单版"或重复类型名。「典型使用场景」需具体（如：强调操作、表格内嵌、Toast 提示中），不得写"各种场景"。';
+
+  const SPEC_SYSTEM_PROMPT = '你必须仅输出一个 JSON 对象，不得包含任何前置文字、后置文字、注释或代码块标记（如 ```）。不得使用尾随逗号。\n\n你是一名专业的设计规范文档专家，负责为 Figma 组件生成标准设计规范。\n\n每次输出必须是完整的规范 JSON（不是 diff，即使只改一处也输出全量）。\nJSON 结构如下：\n{\n  "overview": {\n    "description": "组件的功能描述",\n    "props": [{ "name": "属性名", "type": "类型", "default": "默认值", "desc": "说明" }]\n  },\n  "composition": [\n    { "part": "语义化中文角色名（如：关闭图标、主操作按钮）", "required": "是", "desc": "视觉功能说明（位置、设计意图）" }\n  ],\n  "color_tokens": [\n    { "level": "层级名", "token": "color/bg/primary", "colorHex": "#1A6EF5", "desc": "用途说明" }\n  ],\n  "variants": [\n    { "name": "类型名", "description": "描述", "usage": "使用场景" }\n  ],\n  "interaction": {\n    "states": ["状态列表，如：默认/hover/active/disabled"],\n    "behaviors": ["操作响应，如：点击/长按行为"],\n    "edge_cases": ["边界条件"]\n  },\n  "display_rules": [\n    { "rule": "规则名", "desc": "说明" }\n  ],\n  "content_rules": [\n    { "field": "字段名", "default": "默认值", "display": "显示规则", "truncation": "截断处理" }\n  ]\n}\n\n规则：\n1. 若组件没有颜色层级变体，省略 color_tokens 字段。\n2. composition[].part 必须使用语义化中文角色名（如：关闭图标、主操作按钮、品牌标题），禁止使用 Figma 图层原始名称；desc 需体现该部件的视觉功能定位（如：承载品牌信息的标题区、触发主操作的 CTA 按钮），避免仅重复 part 名称。若知识库中有同类组件的构成词汇，优先复用。\n3. 若知识库中包含当前组件或同类组件的交互规范，interaction.states/behaviors/edge_cases 必须优先引用，不得忽略而自行推断。描述聚焦视觉感知（如"按下时背景色加深"），不得仅陈述状态名称。\n4. 字符串值内禁止使用字面控制字符（如字面换行），所有换行必须写成 \\n。\n5. JSON 结构符号（花括号、方括号、冒号、逗号、双引号）必须使用半角 ASCII 字符，禁止使用全角标点（如 ： ， 【 】 " "）。\n6. 若用户消息中包含「预提取构成项」，composition 数组必须严格按该列表的顺序和数量输出（禁止增删条目或按属性分组）。每项的 originalLayer 字段为 Figma 原始图层名（只读），根据它推断该部件的设计角色，将语义化中文角色名写入 part 字段（如：关闭图标、用户头像、主操作按钮），再填写 required 和 desc。\n7. variants[].description 需包含视觉区分特征（色调、密度、层级等），不得仅写"简单版"或重复 name 字段。variants[].usage 需给出典型场景（如"适用于需要突出品牌的主 CTA 场景"），不得写"适用各种场景"。\n8. 所有文字描述简洁克制，整体风格面向 Figma 设计师，关注「为什么这样设计」而非「有哪些属性」。';
+
+  // ── Spec tab: KB promise resolvers ──
+  let kbIndexResolver = null;
+  let kbChunkResolver = null;
+  let kbChunkSetResolver = null;
+  let kbDeleteResolver = null;
+  let kbVecResolver = null;
+  let kbVecSetResolver = null;
+
+  function requestKbIndex() {
+    return new Promise(resolve => {
+      kbIndexResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-get-index' } }, '*');
+    });
+  }
+  function setKbIndex(arr) {
+    parent.postMessage({ pluginMessage: { type: 'kb-set-index', index: arr } }, '*');
+  }
+  function requestKbChunk(key) {
+    return new Promise(resolve => {
+      kbChunkResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-get-chunk', key } }, '*');
+    });
+  }
+  function setKbChunk(key, value) {
+    return new Promise(resolve => {
+      kbChunkSetResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-set-chunk', key, value } }, '*');
+    });
+  }
+  function deleteKbFile(name, chunks) {
+    return new Promise(resolve => {
+      kbDeleteResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-delete-file', name, chunks } }, '*');
+    });
+  }
+  function requestKbVec(key) {
+    return new Promise(resolve => {
+      kbVecResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-get-vec', key } }, '*');
+    });
+  }
+  function setKbVec(key, value) {
+    return new Promise(resolve => {
+      kbVecSetResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'kb-set-vec', key, value } }, '*');
+    });
+  }
+
+  function sanitizeKbName(name) {
+    return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  }
+
+  function isFolderFileIncluded(relativePath) {
+    const parts = relativePath.split('/');
+    if (parts.some(p => p.startsWith('.'))) return false;
+    return relativePath.endsWith('.md') || relativePath.endsWith('.json');
+  }
+
+  // ── Spec tab: component info resolver ──
+  let componentInfoResolver = null;
+
+  function refreshComponentInfo() {
+    parent.postMessage({ pluginMessage: { type: 'get-component-info', source: 'manual' } }, '*');
+  }
+
+  function requestComponentInfo(source) {
+    return new Promise((resolve, reject) => {
+      componentInfoResolver = { resolve, reject, source };
+      parent.postMessage({ pluginMessage: { type: 'get-component-info', source } }, '*');
+    });
+  }
+
+  function updateComponentBar(data) {
+    const chip = document.getElementById('spec-composer-component');
+    const nameEl = document.getElementById('spec-composer-component-name');
+    const metaEl = document.getElementById('spec-composer-component-meta');
+    const sendBtn = document.getElementById('spec-composer-send-btn');
+    if (data && data.name) {
+      specComponentData = data;
+      nameEl.textContent = data.name;
+      const propCount = data.props ? data.props.length : 0;
+      const variantCount = data.variants ? data.variants.length : 0;
+      metaEl.textContent = ' · ' + propCount + ' 属性 · ' + variantCount + ' 变体';
+      chip.classList.add('has-component');
+      sendBtn.disabled = false;
+    } else {
+      specComponentData = null;
+      nameEl.textContent = '未选中组件';
+      metaEl.textContent = '';
+      chip.classList.remove('has-component');
+      sendBtn.disabled = true;
+    }
+  }
+
+  // ── Spec tab: KB management ──
+  let kbIndex = [];
+  const KB_MAX_CHUNK = 50 * 1024; // 50KB
+
+  async function loadKbIndex() {
+    kbIndex = await requestKbIndex();
+    renderKbFileList();
+    updateKbCount();
+  }
+
+  function updateKbCount() {
+    const el = document.getElementById('spec-composer-kb-count');
+    if (!el) return;
+    if (kbIndex.length > 0) {
+      el.textContent = kbIndex.length;
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  }
+
+  function renderKbFileList() {
+    const listEl = document.getElementById('kb-file-list');
+    const emptyEl = document.getElementById('kb-empty');
+    const totalEl = document.getElementById('kb-total-size');
+    if (!listEl) return;
+    listEl.textContent = '';
+    if (kbIndex.length === 0) {
+      if (emptyEl) emptyEl.style.display = '';
+      if (totalEl) totalEl.textContent = '';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    let totalSize = 0;
+    kbIndex.forEach(entry => {
+      totalSize += entry.size || 0;
+      const item = document.createElement('div');
+      item.className = 'kb-file-item';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'kb-file-item__name';
+      nameSpan.textContent = entry.name;
+      nameSpan.title = entry.name;
+      const sizeSpan = document.createElement('span');
+      sizeSpan.className = 'kb-file-item__size';
+      sizeSpan.textContent = formatSize(entry.size || 0);
+      const delBtn = document.createElement('button');
+      delBtn.className = 'kb-file-item__del';
+      delBtn.textContent = '✕';
+      delBtn.title = '删除';
+      delBtn.onclick = () => handleKbDelete(entry);
+      item.appendChild(nameSpan);
+      item.appendChild(sizeSpan);
+      item.appendChild(delBtn);
+      listEl.appendChild(item);
+    });
+    if (totalEl) totalEl.textContent = '共 ' + formatSize(totalSize);
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  async function handleKbDelete(entry) {
+    const result = await deleteKbFile(entry.name, entry.chunks);
+    if (result && result.ok) {
+      kbIndex = kbIndex.filter(e => e.name !== entry.name);
+      setKbIndex(kbIndex);
+      renderKbFileList();
+      updateKbCount();
+    }
+  }
+
+  async function handleKbImport(items) {
+    const progEl = document.getElementById('kb-progress');
+    for (let fi = 0; fi < items.length; fi++) {
+      const item = items[fi];
+      const file = item.file || item;
+      const name = item.name || file.name;
+      if (progEl) { progEl.style.display = ''; progEl.textContent = '导入中... ' + (fi + 1) + '/' + items.length + ' ' + name; }
+      const content = await file.text();
+      const safeName = sanitizeKbName(name);
+
+      // Parse title from first # heading
+      const titleMatch = content.match(/^#\s+(.+)$/m);
+      const title = titleMatch ? titleMatch[1].trim() : name;
+
+      // Semantic chunking: split by ## headings
+      const sections = content.split(/^(?=##\s)/m);
+      const chunks = sections.length > 0 ? sections : [content];
+
+      // Build embedding input texts
+      const embeddingTexts = chunks.map((chunk, idx) => {
+        const secTitleMatch = chunk.match(/^##\s+(.+)$/m);
+        const secTitle = secTitleMatch ? secTitleMatch[1].trim() : ('Section ' + idx);
+        return '文件：' + name + '\n章节：' + secTitle + '\n' + chunk;
+      });
+
+      // Store chunks
+      for (let ci = 0; ci < chunks.length; ci++) {
+        const key = safeName + '_' + ci;
+        await setKbChunk(key, chunks[ci]);
+      }
+
+      // Generate and store embeddings
+      let hasEmbeddings = false;
+      try {
+        if (progEl) { progEl.textContent = '生成向量... ' + name; }
+        const vecs = await callEmbeddingAPI(embeddingTexts);
+        for (let ci = 0; ci < vecs.length; ci++) {
+          await setKbVec(safeName + '_' + ci, vecs[ci]);
+        }
+        hasEmbeddings = true;
+      } catch (e) {
+        console.warn('Embedding generation failed for', name, e);
+        hasEmbeddings = false;
+      }
+
+      // Remove existing entry with same name
+      kbIndex = kbIndex.filter(e => e.name !== name);
+      kbIndex.push({ name, safeName, chunks: chunks.length, size: content.length, hasEmbeddings, title });
+    }
+    setKbIndex(kbIndex);
+    renderKbFileList();
+    updateKbCount();
+    if (progEl) { progEl.style.display = 'none'; progEl.textContent = ''; }
+  }
+
+  function showKbModal() {
+    document.getElementById('kb-modal').classList.remove('hidden');
+    loadKbIndex();
+  }
+  function hideKbModal() {
+    document.getElementById('kb-modal').classList.add('hidden');
+  }
+
+  // ── Spec tab: output helpers ──
+  function clearSpecOutput() {
+    const output = document.getElementById('spec-output');
+    while (output.firstChild) output.removeChild(output.firstChild);
+  }
+
+  function appendUserBubble(text) {
+    document.getElementById('spec-empty').classList.add('hidden');
+    const wall = document.getElementById('spec-output');
+    const el = document.createElement('div');
+    el.className = 'spec-bubble spec-bubble--user';
+    el.textContent = text;
+    wall.appendChild(el);
+    wall.scrollTop = wall.scrollHeight;
+  }
+
+  function appendAssistantBubble() {
+    const wall = document.getElementById('spec-output');
+    const el = document.createElement('div');
+    el.className = 'spec-bubble spec-bubble--assistant spec-bubble--streaming';
+    const mdDiv = document.createElement('div');
+    mdDiv.className = 'spec-bubble__md';
+    el.appendChild(mdDiv);
+    wall.appendChild(el);
+    wall.scrollTop = wall.scrollHeight;
+    return { el, mdDiv };
+  }
+
+  function updateAssistantBubble(el, mdDiv, markdown, streaming) {
+    // DOMPurify.sanitize prevents XSS in AI-generated markdown content
+    mdDiv.innerHTML = DOMPurify.sanitize(marked.parse(markdown || ''));
+    el.classList.toggle('spec-bubble--streaming', streaming);
+    document.getElementById('spec-output').scrollTop = 99999;
+  }
+
+  function appendErrorBubble(msg) {
+    const wall = document.getElementById('spec-output');
+    const el = document.createElement('div');
+    el.className = 'spec-bubble spec-bubble--assistant';
+    el.style.color = 'var(--danger)';
+    el.textContent = msg;
+    wall.appendChild(el);
+  }
+
+  // ── Spec tab: preview card ──
+  function buildSpecPreview(specJson) {
+    const card = document.createElement('div');
+    card.className = 'spec-preview';
+    const sections = [
+      { key: 'overview',      title: '概述',      render: renderOverview },
+      { key: 'composition',   title: '组件构成',   render: renderComposition },
+      { key: 'color_tokens',  title: '颜色规范',   render: renderColorTokens },
+      { key: 'variants',      title: '类型与用法', render: renderVariants },
+      { key: 'interaction',   title: '交互说明',   render: renderInteraction },
+      { key: 'display_rules', title: '显示规则',   render: renderDisplayRules },
+      { key: 'content_rules', title: '内容规则',   render: renderContentRules }
+    ];
+    sections.forEach(sec => {
+      if (!specJson[sec.key]) return;
+      const section = document.createElement('div');
+      section.className = 'spec-preview__section';
+      const header = document.createElement('div');
+      header.className = 'spec-preview__header open';
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = sec.title;
+      const chevron = document.createElement('span');
+      chevron.className = 'spec-preview__chevron';
+      chevron.textContent = '▶';
+      header.appendChild(titleSpan);
+      header.appendChild(chevron);
+      const body = document.createElement('div');
+      body.className = 'spec-preview__body';
+      body.appendChild(sec.render(specJson[sec.key]));
+      header.onclick = () => {
+        header.classList.toggle('open');
+        body.classList.toggle('hidden');
+      };
+      section.appendChild(header);
+      section.appendChild(body);
+      card.appendChild(section);
+    });
+    return card;
+  }
+
+  function renderOverview(ov) {
+    const frag = document.createDocumentFragment();
+    if (ov.description) {
+      const descDiv = document.createElement('div');
+      descDiv.style.marginBottom = '6px';
+      descDiv.textContent = ov.description;
+      frag.appendChild(descDiv);
+    }
+    if (ov.props && ov.props.length) {
+      const table = document.createElement('table');
+      table.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;';
+      const thead = document.createElement('tr');
+      thead.style.background = 'var(--bg-2)';
+      ['属性','类型','默认值','说明'].forEach(t => {
+        const th = document.createElement('th');
+        th.style.cssText = 'padding:3px 6px;text-align:left;';
+        th.textContent = t;
+        thead.appendChild(th);
+      });
+      table.appendChild(thead);
+      ov.props.forEach(p => {
+        const tr = document.createElement('tr');
+        [p.name, p.type, p.default, p.desc].forEach(val => {
+          const td = document.createElement('td');
+          td.style.cssText = 'padding:3px 6px;';
+          td.textContent = val || '';
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+      frag.appendChild(table);
+    }
+    return frag;
+  }
+
+  function renderVariants(variants) {
+    const frag = document.createDocumentFragment();
+    if (!Array.isArray(variants) || variants.length === 0) {
+      const em = document.createElement('em');
+      em.textContent = '无';
+      frag.appendChild(em);
+      return frag;
+    }
+    variants.forEach(v => {
+      const div = document.createElement('div');
+      div.style.marginBottom = '6px';
+      const strong = document.createElement('strong');
+      strong.textContent = v.name || '';
+      div.appendChild(strong);
+      if (v.description) div.appendChild(document.createTextNode(' — ' + v.description));
+      if (v.usage) {
+        const usageDiv = document.createElement('div');
+        usageDiv.style.cssText = 'color:var(--text-2);font-size:11px;';
+        usageDiv.textContent = '使用场景: ' + v.usage;
+        div.appendChild(usageDiv);
+      }
+      frag.appendChild(div);
+    });
+    return frag;
+  }
+
+  function renderInteraction(inter) {
+    const frag = document.createDocumentFragment();
+    if (inter.states && inter.states.length) {
+      const d = document.createElement('div');
+      d.style.marginBottom = '4px';
+      const b = document.createElement('strong');
+      b.textContent = '状态: ';
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(inter.states.join(', ')));
+      frag.appendChild(d);
+    }
+    if (inter.behaviors && inter.behaviors.length) {
+      const d = document.createElement('div');
+      d.style.marginBottom = '4px';
+      const b = document.createElement('strong');
+      b.textContent = '行为: ';
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(inter.behaviors.join(', ')));
+      frag.appendChild(d);
+    }
+    if (inter.edge_cases && inter.edge_cases.length) {
+      const d = document.createElement('div');
+      const b = document.createElement('strong');
+      b.textContent = '边界: ';
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(inter.edge_cases.join(', ')));
+      frag.appendChild(d);
+    }
+    if (!frag.hasChildNodes()) {
+      const em = document.createElement('em');
+      em.textContent = '无';
+      frag.appendChild(em);
+    }
+    return frag;
+  }
+
+  function renderDisplayRules(rules) {
+    const frag = document.createDocumentFragment();
+    if (!Array.isArray(rules) || rules.length === 0) {
+      const em = document.createElement('em');
+      em.textContent = '无';
+      frag.appendChild(em);
+      return frag;
+    }
+    rules.forEach(r => {
+      const d = document.createElement('div');
+      d.style.marginBottom = '4px';
+      const b = document.createElement('strong');
+      b.textContent = (r.rule || '') + ': ';
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(r.desc || ''));
+      frag.appendChild(d);
+    });
+    return frag;
+  }
+
+  function renderComposition(composition) {
+    const frag = document.createDocumentFragment();
+    if (!Array.isArray(composition) || composition.length === 0) {
+      const em = document.createElement('em'); em.textContent = '无'; frag.appendChild(em); return frag;
+    }
+    const table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;';
+    const thead = document.createElement('tr');
+    thead.style.background = 'var(--figma-color-bg-secondary, #f3f3f5)';
+    ['构成', '是否必须', '说明'].forEach(t => {
+      const th = document.createElement('th');
+      th.style.cssText = 'padding:3px 6px;text-align:left;font-weight:600;';
+      th.textContent = t;
+      thead.appendChild(th);
+    });
+    table.appendChild(thead);
+    composition.forEach(c => {
+      const tr = document.createElement('tr');
+      [c.part, c.required, c.desc].forEach(val => {
+        const td = document.createElement('td');
+        td.style.cssText = 'padding:3px 6px;';
+        td.textContent = val || '';
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    frag.appendChild(table);
+    return frag;
+  }
+
+  function renderColorTokens(tokens) {
+    const frag = document.createDocumentFragment();
+    if (!Array.isArray(tokens) || tokens.length === 0) {
+      const em = document.createElement('em'); em.textContent = '无'; frag.appendChild(em); return frag;
+    }
+    tokens.forEach(ct => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;';
+      const swatch = document.createElement('div');
+      swatch.style.cssText = 'width:28px;height:18px;border-radius:3px;border:1px solid rgba(0,0,0,0.1);flex-shrink:0;';
+      swatch.style.background = ct.colorHex || '#888';
+      const name = document.createElement('span');
+      name.style.fontWeight = '600';
+      name.textContent = ct.token || '';
+      const hex = document.createElement('span');
+      hex.style.opacity = '0.6';
+      hex.textContent = ct.colorHex || '';
+      const desc = document.createElement('span');
+      desc.style.opacity = '0.6';
+      desc.textContent = ct.desc ? '— ' + ct.desc : '';
+      row.appendChild(swatch); row.appendChild(name); row.appendChild(hex); row.appendChild(desc);
+      frag.appendChild(row);
+    });
+    return frag;
+  }
+
+  function renderContentRules(rules) {
+    const frag = document.createDocumentFragment();
+    if (!Array.isArray(rules) || rules.length === 0) {
+      const em = document.createElement('em'); em.textContent = '无'; frag.appendChild(em); return frag;
+    }
+    const table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;';
+    const thead = document.createElement('tr');
+    thead.style.background = 'var(--figma-color-bg-secondary, #f3f3f5)';
+    ['字段', '默认值', '显示规则', '截断处理'].forEach(t => {
+      const th = document.createElement('th');
+      th.style.cssText = 'padding:3px 6px;text-align:left;font-weight:600;';
+      th.textContent = t;
+      thead.appendChild(th);
+    });
+    table.appendChild(thead);
+    rules.forEach(r => {
+      const tr = document.createElement('tr');
+      [r.field, r.default, r.display, r.truncation].forEach(val => {
+        const td = document.createElement('td');
+        td.style.cssText = 'padding:3px 6px;';
+        td.textContent = val || '';
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    frag.appendChild(table);
+    return frag;
+  }
+
+  function laxJsonParse(str) {
+    const fixed = str.replace(/,(\s*[}\]])/g, '$1');
+    return JSON.parse(fixed);
+  }
+
+  function deepRepairJson(str) {
+    let out = '', inStr = false, esc = false;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i], code = ch.charCodeAt(0);
+      if (esc) { out += ch; esc = false; continue; }
+      if (ch === '\\' && inStr) { out += ch; esc = true; continue; }
+      if (ch === '"') { inStr = !inStr; out += ch; continue; }
+      if (inStr && code < 0x20) {
+        out += code === 10 ? '\\n' : code === 13 ? '\\r' : code === 9 ? '\\t'
+             : '\\u' + code.toString(16).padStart(4, '0');
+      } else { out += ch; }
+    }
+    const fixed = out.replace(/,(\s*[}\]])/g, '$1');
+    return JSON.parse(fixed);
+  }
+
+  function normalizeFullWidthJson(str) {
+    const FW = {
+      '：': ':', '；': ';', '，': ',',
+      '【': '[', '】': ']',
+      '｛': '{', '｝': '}',
+      '［': '[', '］': ']',
+      '“': '"', '”': '"',
+      '‘': "'", '’': "'",
+    };
+    let out = '', inStr = false, esc = false;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      if (esc) { out += ch; esc = false; continue; }
+      if (ch === '\\' && inStr) { out += ch; esc = true; continue; }
+      if (ch === '"') { inStr = !inStr; out += ch; continue; }
+      if (!inStr && FW[ch]) { out += FW[ch]; }
+      else { out += ch; }
+    }
+    return out;
+  }
+
+  // ── Spec tab: AI call ──
+  async function callAthenAIChat(messages, retry) {
+    if (!storedApiKey) throw new Error('API 密钥未设置');
+    const resp = await fetch('https://athenai.mihoyo.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': storedApiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8192,
+        system: [{ type: 'text', text: SPEC_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+        messages: messages
+      })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(resp.status + ': ' + errText);
+    }
+    const data = await resp.json();
+    const text = data.content[0].text;
+    // Normalize full-width punctuation before parsing
+    const normalized = normalizeFullWidthJson(text);
+    // Try to parse as JSON
+    try {
+      const parsed = JSON.parse(normalized);
+      return { json: parsed, raw: text };
+    } catch (e) {
+      try { return { json: laxJsonParse(normalized), raw: text }; } catch (e2) { /* fall through */ }
+      try { return { json: deepRepairJson(normalized), raw: text }; } catch (e3) { /* fall through */ }
+      // Try extracting JSON from markdown code block
+      const match = normalized.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) {
+        const inner = normalizeFullWidthJson(match[1].trim());
+        try { return { json: JSON.parse(inner), raw: text }; } catch (e4) { /* fall through */ }
+        try { return { json: laxJsonParse(inner), raw: text }; } catch (e5) { /* fall through */ }
+        try { return { json: deepRepairJson(inner), raw: text }; } catch (e6) { /* fall through */ }
+      }
+      // Fallback: extract outermost {...} from surrounding prose
+      const jsonStart = normalized.indexOf('{');
+      if (jsonStart !== -1) {
+        let depth = 0, inStr = false, esc = false;
+        for (let i = jsonStart; i < normalized.length; i++) {
+          const c = normalized[i];
+          if (esc) { esc = false; continue; }
+          if (c === '\\' && inStr) { esc = true; continue; }
+          if (c === '"') { inStr = !inStr; continue; }
+          if (inStr) continue;
+          if (c === '{') depth++;
+          else if (c === '}' && --depth === 0) {
+            const slice = normalized.slice(jsonStart, i + 1);
+            try { return { json: JSON.parse(slice), raw: text }; } catch { /* fall through */ }
+            try { return { json: laxJsonParse(slice), raw: text }; } catch { /* fall through */ }
+            try { return { json: deepRepairJson(slice), raw: text }; } catch { break; }
+          }
+        }
+      }
+      if (!retry) {
+        // Retry once: append a message asking for pure JSON
+        const retryMsgs = messages.concat([
+          { role: 'assistant', content: text },
+          { role: 'user', content: '请只返回纯 JSON，不要包含其他文字或代码块标记。字符串值内禁止使用字面换行，必须写成 \\n。JSON 结构符号必须使用半角 ASCII 字符（: , { } [ ] "），禁止使用全角标点。' }
+        ]);
+        return callAthenAIChat(retryMsgs, true);
+      }
+      return { json: null, raw: text };
+    }
+  }
+
+  // ── Spec tab: SSE streaming call (Markdown format) ──
+  async function streamAthenAIChat(messages, onToken) {
+    if (!storedApiKey) throw new Error('API 密钥未设置');
+    const res = await fetch('https://athenai.mihoyo.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': storedApiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8192,
+        stream: true,
+        system: [{ type: 'text', text: SPEC_SYSTEM_PROMPT_MD, cache_control: { type: 'ephemeral' } }],
+        messages,
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(res.status + ': ' + errText);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let accumulated = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') return accumulated;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.type === 'content_block_delta' && ev.delta.type === 'text_delta') {
+            accumulated += ev.delta.text;
+            onToken(accumulated);
+          }
+        } catch { /* 忽略格式错误的 SSE 行 */ }
+      }
+    }
+    return accumulated;
+  }
+
+  // ── Spec tab: embedding API ──
+  async function callEmbeddingAPI(texts) {
+    if (!storedApiKey) throw new Error('API key not set');
+    const resp = await fetch('https://athenai.mihoyo.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + storedApiKey
+      },
+      body: JSON.stringify({ model: 'bge-m3', input: texts, encoding_format: 'float' })
+    });
+    if (!resp.ok) throw new Error('Embedding API: ' + resp.status);
+    const data = await resp.json();
+    return data.data.map(d => d.embedding);
+  }
+
+  function cosineSim(a, b) {
+    let dot = 0, na = 0, nb = 0;
+    for (let i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      na += a[i] * a[i];
+      nb += b[i] * b[i];
+    }
+    return dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
+  }
+
+  const KB_KEYWORD_MAP = [
+    { file: 'module-panren', keywords: ['FT卡', 'FT Card', 'ft-card', '阵型表', '盘人', '人员卡', '模板', '浮窗'] },
+    { file: 'module-panshi', keywords: ['事项卡', 'Event Card', 'event-card', '盘事', '子画布', 'Sub Canvas'] },
+    { file: 'module-ft-assembly', keywords: ['装配台', '架构树', '根节点', '项目管理', '周期', '发布'] },
+    { file: 'component-usage', keywords: ['Side Navi', '工具栏', 'Toolbar', 'FT卡', '事项卡', '阵型表', 'zoomTools'] },
+    { file: 'design-system', keywords: ['颜色', 'Token', '字体', '间距', '圆角', '阴影'] },
+    { file: 'date-time-format', keywords: ['时间', '日期', '星期', '时区'] },
+    { file: 'edge-cases', keywords: ['空状态', '边界', '异常', '停用', '溢出'] },
+    { file: 'state-machine', keywords: ['状态', '权限', '条件', '逻辑'] },
+    { file: 'flow-overview', keywords: ['流程', '用户旅程', '步骤'] },
+    { file: 'page-flow-map', keywords: ['画布', '页面跳转', '入口', '导航', '定位'] },
+    { file: 'design-decisions', keywords: ['决策', '为什么'] },
+    { file: 'terms', keywords: ['术语', '定义', '缩写'] },
+  ];
+
+  function matchKbFiles(text) {
+    const matched = new Set();
+    const lowerText = text.toLowerCase();
+    for (const mapping of KB_KEYWORD_MAP) {
+      for (const kw of mapping.keywords) {
+        if (lowerText.includes(kw.toLowerCase())) {
+          matched.add(mapping.file);
+          break;
+        }
+      }
+    }
+    return [...matched];
+  }
+
+  async function retrieveRelevantChunks(queryText, topK) {
+    if (topK === undefined) topK = 5;
+    let queryVec;
+    try {
+      const vecs = await callEmbeddingAPI([queryText]);
+      queryVec = vecs[0];
+    } catch (e) {
+      console.warn('Embedding failed, falling back:', e);
+      return null;
+    }
+
+    const scored = [];
+    const guides = [];
+
+    // Keyword-mapping pre-filter: find matched files by static keyword table
+    const matchedFiles = matchKbFiles(queryText);
+    const useKeywordFilter = matchedFiles.length > 0;
+
+    for (const entry of kbIndex) {
+      const safeName = sanitizeKbName(entry.name);
+      if (entry.name.toLowerCase().includes('retrieval-guide') || entry.name.toLowerCase().includes('_guide') || entry.name.toLowerCase().includes('design-kb-retrieval')) {
+        let content = '';
+        for (let ci = 0; ci < entry.chunks; ci++) {
+          const chunk = await requestKbChunk(safeName + '_' + ci);
+          if (chunk) content += chunk;
+        }
+        guides.push({ content, name: entry.name, score: 1, isLegacy: false, isRetrievalGuide: true });
+        continue;
+      }
+
+      // When keyword filter matched, only embed-rank chunks from matched files; skip others
+      if (useKeywordFilter) {
+        const entryBase = entry.name.replace(/\.[^.]+$/, '').toLowerCase();
+        const isMatched = matchedFiles.some(f => entryBase.includes(f.toLowerCase()));
+        if (!isMatched) continue;
+      }
+
+      if (!entry.hasEmbeddings) {
+        let content = '';
+        for (let ci = 0; ci < entry.chunks; ci++) {
+          const chunk = await requestKbChunk(safeName + '_' + ci);
+          if (chunk) content += chunk;
+        }
+        scored.push({ content, name: entry.name, score: 0, isLegacy: true, isRetrievalGuide: false });
+        continue;
+      }
+
+      for (let ci = 0; ci < entry.chunks; ci++) {
+        const vec = await requestKbVec(safeName + '_' + ci);
+        if (!vec) continue;
+        const sim = cosineSim(queryVec, vec);
+        const content = await requestKbChunk(safeName + '_' + ci);
+        scored.push({ content, name: entry.name + '#' + ci, score: sim, isLegacy: false, isRetrievalGuide: false });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    const topResults = scored.filter(r => !r.isLegacy).slice(0, topK);
+    const legacyResults = scored.filter(r => r.isLegacy);
+    return [...guides, ...topResults, ...legacyResults];
+  }
+
+  // ── Spec tab: build first user message ──
+  async function buildFirstUserMessage(userText) {
+    const d = specComponentData;
+    let kbContent = '';
+
+    // Try semantic retrieval first
+    const queryText = (d.name || '') + ' ' + (d.description || '') + ' ' + (userText || '');
+    const retrieved = await retrieveRelevantChunks(queryText, 5);
+
+    if (retrieved) {
+      // Use retrieved chunks
+      for (const r of retrieved) {
+        if (r.content) {
+          kbContent += '== ' + r.name + (r.isRetrievalGuide ? ' [guide]' : '') + ' ==\n' + r.content + '\n\n';
+        }
+      }
+    } else {
+      // Fallback: load all KB content
+      if (kbIndex.length > 0) {
+        for (const entry of kbIndex) {
+          let fileContent = '';
+          const safeName = sanitizeKbName(entry.name);
+          for (let ci = 0; ci < entry.chunks; ci++) {
+            const chunk = await requestKbChunk(safeName + '_' + ci);
+            if (chunk) fileContent += chunk;
+          }
+          kbContent += '== ' + entry.name + ' ==\n' + fileContent + '\n\n';
+        }
+      }
+    }
+
+    const ir = buildStructuredIR(d);
+    let textMsg = '[组件信息]\n';
+    textMsg += '名称：' + (d.name || '') + '\n';
+    textMsg += '描述：' + (d.description || '') + '\n';
+    textMsg += '组件属性：' + JSON.stringify(d.props || []) + '\n';
+    textMsg += '变体：' + JSON.stringify(d.variants || []) + '\n';
+    if (ir.composition) {
+      textMsg += '\n[预提取构成项 — 条目顺序和数量固定，禁止增删或分组；originalLayer 为 Figma 原始图层名（只读参考），part 字段需根据 originalLayer 推断语义化中文角色名，required 和 desc 也需填写]\n';
+      textMsg += JSON.stringify(ir.composition) + '\n';
+    } else {
+      textMsg += '图层结构：' + JSON.stringify(d.layers || {}) + '\n';
+    }
+    textMsg += '\n';
+    if (kbContent) {
+      textMsg += '[知识库内容]\n' + kbContent + '\n';
+    }
+    textMsg += '[用户补充说明]\n' + (userText || '生成设计规范') + '\n';
+    textMsg += '\n请根据以上信息生成设计规范。';
+
+    // Build content blocks
+    const contentBlocks = [];
+    if (d.componentRender) {
+      contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: d.componentRender } });
+      contentBlocks.push({ type: 'text', text: '上图是当前选中组件的 2x 渲染截图，请结合图片分析其视觉结构和样式细节。' });
+    }
+    if (d.screenshot) {
+      contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: d.screenshot } });
+      contentBlocks.push({ type: 'text', text: '上图是一张设计规范的生成效果示例，请参照其排版风格和内容深度输出。' });
+    }
+    contentBlocks.push({ type: 'text', text: textMsg, cache_control: { type: 'ephemeral' } });
+    return contentBlocks;
+  }
+
+  // ── Spec tab: build structured IR (structure = Figma, descriptions = AI fills) ──
+  function buildStructuredIR(d) {
+    const composition = (d.composition && d.composition.length > 0)
+      ? d.composition.map(c => ({ index: c.index, originalLayer: c.name, part: '', required: null, desc: null }))
+      : null;
+    return { composition };
+  }
+
+  // ── Spec tab: unified submit ──
+  function specSubmit() {
+    if (specIsSending) return;
+    if (!latestSpecMarkdown) {
+      specGenerate();
+    } else {
+      specRefine();
+    }
+  }
+
+  // ── Spec tab: generate (fresh) — shows context preview before sending ──
+  async function specGenerate() {
+    if (specIsSending) return;
+    if (!specComponentData) { showToast('请先选中一个组件', 'error'); return; }
+    if (!storedApiKey) { showToast('请先设置 API 密钥', 'error'); return; }
+    const textarea = document.getElementById('spec-composer-input');
+    const userText = textarea.value.trim();
+    // Force-refresh component data with render screenshot before building the message
+    try {
+      await requestComponentInfo('spec-generate');
+    } catch (e) {
+      console.warn('Failed to refresh component render screenshot:', e);
+    }
+    const content = await buildFirstUserMessage(userText || '生成设计规范');
+    showContextPreview(content, userText || '生成设计规范');
+  }
+
+  // ── Spec tab: refine (follow-up) ──
+  async function specRefine() {
+    if (specIsSending) return;
+    const textarea = document.getElementById('spec-composer-input');
+    const userText = textarea.value.trim();
+    textarea.value = '';
+    autoResizeTextarea(textarea);
+    await specDoSend(userText || '请继续优化');
+  }
+
+  // ── Spec tab: shared send ──
+  async function specDoSend(userText, prebuiltContent) {
+    specIsSending = true;
+    document.getElementById('spec-composer-send-btn').disabled = true;
+    document.getElementById('spec-composer-write-btn').classList.add('hidden');
+
+    let content;
+    if (specMessages.length === 0) {
+      content = prebuiltContent || await buildFirstUserMessage(userText);
+    } else {
+      content = userText;
+    }
+    specMessages.push({ role: 'user', content });
+
+    appendUserBubble(userText);
+    const { el: bubbleEl, mdDiv } = appendAssistantBubble();
+
+    try {
+      const fullMarkdown = await streamAthenAIChat(specMessages, (accumulated) => {
+        updateAssistantBubble(bubbleEl, mdDiv, accumulated, true);
+      });
+
+      updateAssistantBubble(bubbleEl, mdDiv, fullMarkdown, false);
+      specMessages.push({ role: 'assistant', content: fullMarkdown });
+      latestSpecMarkdown = fullMarkdown;
+      document.getElementById('spec-composer-write-btn').classList.remove('hidden');
+    } catch (err) {
+      bubbleEl.remove();
+      appendErrorBubble('调用失败: ' + err.message);
+    }
+
+    specIsSending = false;
+    document.getElementById('spec-composer-send-btn').disabled = !specComponentData;
+  }
+
+  // ── Context Preview Modal ──
+  function showContextPreview(contentBlocks, userText) {
+    pendingContextBlocks = contentBlocks;
+    pendingUserText = userText;
+    const body = document.getElementById('ctx-preview-body');
+    while (body.firstChild) body.removeChild(body.firstChild);
+
+    // Images section
+    const images = contentBlocks.filter(b => b.type === 'image');
+    if (images.length > 0) {
+      const imgLabels = ['组件渲染图', '规范示例图'];
+      const row = document.createElement('div');
+      row.className = 'ctx-img-row';
+      images.forEach((img, i) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'ctx-thumb';
+        const el = document.createElement('img');
+        el.src = 'data:' + img.source.media_type + ';base64,' + img.source.data;
+        const label = document.createElement('div');
+        label.className = 'ctx-thumb__label';
+        label.textContent = imgLabels[i] || ('图片 ' + (i + 1));
+        thumb.appendChild(el);
+        thumb.appendChild(label);
+        row.appendChild(thumb);
+      });
+      body.appendChild(buildCtxSection('图片（' + images.length + '张）', row, true));
+    }
+
+    // Parse main text block
+    const mainBlock = contentBlocks.find(b => b.type === 'text' && b.text && b.text.includes('[组件信息]'));
+    if (mainBlock) {
+      const sections = parseContextSections(mainBlock.text);
+      if (sections.componentInfo) {
+        body.appendChild(buildCtxSection('组件信息', makeCtxPre(sections.componentInfo), true));
+      }
+      if (sections.composition) {
+        body.appendChild(buildCtxSection('构成项', makeCtxPre(sections.composition), true));
+      }
+      if (sections.kbContent) {
+        const kbFiles = (sections.kbContent.match(/^== .+ ==$/gm) || []).length;
+        const title = '知识库内容' + (kbFiles > 0 ? '（' + kbFiles + ' 个文件）' : '');
+        body.appendChild(buildCtxSection(title, makeCtxPre(sections.kbContent), false));
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'ctx-empty';
+        empty.textContent = '未加载知识库内容';
+        body.appendChild(buildCtxSection('知识库内容', empty, false));
+      }
+      if (sections.userNote) {
+        body.appendChild(buildCtxSection('用户补充说明', makeCtxPre(sections.userNote), true));
+      }
+    }
+
+    document.getElementById('ctx-preview-modal').classList.add('open');
+  }
+
+  function hideContextPreview() {
+    document.getElementById('ctx-preview-modal').classList.remove('open');
+  }
+
+  function parseContextSections(text) {
+    const sections = {};
+    const compMatch = text.match(/\[组件信息\]\n([\s\S]*?)(?=\n\[预提取|\n图层结构：|\n\[知识库|\n请根据)/);
+    if (compMatch) sections.componentInfo = compMatch[1].trim();
+    const preCompMatch = text.match(/(\[预提取构成项[^\n]*\n[\s\S]*?)(?=\n\[知识库|\n\[用户补充|\n请根据)/);
+    if (preCompMatch) {
+      sections.composition = preCompMatch[1].trim();
+    } else {
+      const layerMatch = text.match(/(图层结构：[\s\S]*?)(?=\n\[知识库|\n\[用户补充|\n请根据)/);
+      if (layerMatch) sections.composition = layerMatch[1].trim();
+    }
+    const kbMatch = text.match(/\[知识库内容\]\n([\s\S]*?)(?=\n\[用户补充|$)/);
+    if (kbMatch) sections.kbContent = kbMatch[1].trim();
+    const userMatch = text.match(/\[用户补充说明\]\n([\s\S]*?)(?=\n请根据|$)/);
+    if (userMatch) sections.userNote = userMatch[1].trim();
+    return sections;
+  }
+
+  function buildCtxSection(title, bodyEl, defaultOpen) {
+    const section = document.createElement('div');
+    section.className = 'ctx-section';
+    const header = document.createElement('div');
+    header.className = 'ctx-section__header' + (defaultOpen ? ' open' : '');
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = title;
+    const chevron = document.createElement('span');
+    chevron.className = 'ctx-section__chevron';
+    chevron.textContent = '▶';
+    header.appendChild(titleSpan);
+    header.appendChild(chevron);
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'ctx-section__body' + (defaultOpen ? '' : ' hidden');
+    bodyDiv.appendChild(bodyEl);
+    header.onclick = () => {
+      header.classList.toggle('open');
+      bodyDiv.classList.toggle('hidden');
+    };
+    section.appendChild(header);
+    section.appendChild(bodyDiv);
+    return section;
+  }
+
+  function makeCtxPre(text) {
+    const pre = document.createElement('pre');
+    pre.className = 'ctx-pre';
+    pre.textContent = text;
+    return pre;
+  }
+
+  // ── Spec tab: write to Figma (Markdown → JSON → createSpecFrame) ──
+  async function specWriteToFigma() {
+    if (!latestSpecMarkdown || !specComponentData) return;
+    const writeBtn = document.getElementById('spec-composer-write-btn');
+    writeBtn.disabled = true;
+    writeBtn.textContent = '转换中…';
+    const schema = '{"overview":{"description":"","props":[{"name":"","type":"","default":"","desc":""}]},"composition":[{"part":"","required":"是","desc":""}],"color_tokens":[{"level":"","token":"","colorHex":"","desc":""}],"variants":[{"name":"","description":"","usage":""}],"interaction":{"states":[],"behaviors":[],"edge_cases":[]},"display_rules":[{"rule":"","desc":""}],"content_rules":[{"field":"","default":"","display":"","truncation":""}]}';
+    const preComp = (specComponentData.composition && specComponentData.composition.length > 0)
+      ? specComponentData.composition
+      : null;
+    const compositionConstraint = preComp
+      ? '\n\ncomposition 数组必须严格按以下条目的顺序和数量输出（禁止增删或分组）。originalLayer 为 Figma 原始图层名（只读），根据它推断语义化中文角色名写入 part 字段，再填写 required 和 desc：\n' +
+        JSON.stringify(preComp.map(c => ({ originalLayer: c.name, part: '', required: '', desc: '' })))
+      : '';
+    const conversionMessages = [
+      ...specMessages,
+      { role: 'user', content: '请将以上设计规范严格转换为以下 JSON 格式，仅输出纯 JSON，不含任何其他文字或代码块标记：' + schema + compositionConstraint }
+    ];
+    try {
+      const result = await callAthenAIChat(conversionMessages, false);
+      if (!result.json) throw new Error('JSON 转换失败：' + result.raw.slice(0, 100));
+      parent.postMessage({ pluginMessage: {
+        type: 'create-spec-frame',
+        specJson: result.json,
+        preComposition: (specComponentData.composition && specComponentData.composition.length > 0)
+          ? specComponentData.composition
+          : null,
+        componentId: specComponentData.id,
+        componentName: specComponentData.name
+      } }, '*');
+      showToast('规范帧已写入 Figma', 'success');
+    } catch (err) {
+      showToast('写入失败: ' + err.message, 'error');
+    }
+    writeBtn.disabled = false;
+    writeBtn.textContent = '写入 Figma';
+  }
+
+  function autoResizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  // ── Toast ──
+  function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (type === 'error' ? ' toast--error' : '');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
+  }
+
+  // ── Loading state ──
+  const checkButton = document.getElementById('check');
+  function setLoading(isLoading) {
+    if (isLoading) {
+      checkButton.classList.add('loading');
+      checkButton.disabled = true;
+    } else {
+      checkButton.classList.remove('loading');
+      checkButton.disabled = false;
+    }
+  }
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    setLoading(true);
+    parent.postMessage({ pluginMessage: { type: 'ui-ready' } }, '*');
+    initFillRuleEditor();
+    initApiKeyManager();
+
+    document.getElementById('tab-check').onclick    = () => switchTab('check');
+    document.getElementById('tab-ai').onclick       = () => switchTab('ai');
+    document.getElementById('tab-spec').onclick     = () => switchTab('spec');
+    document.getElementById('apiKeyBtn').onclick    = showApiKeyModal;
+    document.getElementById('api-key-close').onclick  = hideApiKeyModal;
+    document.getElementById('api-key-cancel').onclick = hideApiKeyModal;
+    document.getElementById('api-key-save').onclick   = async () => {
+      const ok = await saveApiKey(document.getElementById('api-key-input').value);
+      if (ok) hideApiKeyModal();
+    };
+    document.getElementById('api-key-modal').onclick = e => {
+      if (e.target === document.getElementById('api-key-modal')) hideApiKeyModal();
+    };
+    document.getElementById('fill-rule-close').onclick  = closeFillRuleEditor;
+    document.getElementById('fill-rule-cancel').onclick = closeFillRuleEditor;
+    document.getElementById('fill-rule-apply').onclick  = applyFillRules;
+    document.getElementById('fill-rule-modal').onclick  = e => {
+      if (e.target === document.getElementById('fill-rule-modal')) closeFillRuleEditor();
+    };
+
+    // ── Spec tab event wiring ──
+    document.getElementById('kb-modal-close').onclick = hideKbModal;
+    document.getElementById('kb-modal').onclick = e => {
+      if (e.target === document.getElementById('kb-modal')) hideKbModal();
+    };
+    document.getElementById('kb-file-input').onchange = e => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleKbImport(Array.from(e.target.files));
+        e.target.value = '';
+      }
+    };
+    document.getElementById('kb-folder-input').onchange = e => {
+      if (e.target.files && e.target.files.length > 0) {
+        const items = Array.from(e.target.files)
+          .filter(f => isFolderFileIncluded(f.webkitRelativePath))
+          .map(f => {
+            const parts = f.webkitRelativePath.split('/');
+            return { file: f, name: parts.slice(1).join('/') };
+          });
+        if (items.length > 0) handleKbImport(items);
+        e.target.value = '';
+      }
+    };
+    document.getElementById('spec-composer-send-btn').onclick = specSubmit;
+    document.getElementById('spec-composer-write-btn').onclick = specWriteToFigma;
+    document.getElementById('spec-composer-kb-btn').onclick = showKbModal;
+    document.getElementById('ctx-preview-close').onclick = hideContextPreview;
+    document.getElementById('ctx-preview-cancel').onclick = hideContextPreview;
+    document.getElementById('ctx-preview-confirm').onclick = async () => {
+      hideContextPreview();
+      const blocks = pendingContextBlocks;
+      const text = pendingUserText;
+      pendingContextBlocks = null;
+      pendingUserText = null;
+      specMessages = [];
+      latestSpecMarkdown = null;
+      clearSpecOutput();
+      document.getElementById('spec-composer-write-btn').classList.add('hidden');
+      const textarea = document.getElementById('spec-composer-input');
+      textarea.value = '';
+      autoResizeTextarea(textarea);
+      await specDoSend(text, blocks);
+    };
+    document.getElementById('ctx-preview-modal').onclick = e => {
+      if (e.target === document.getElementById('ctx-preview-modal')) hideContextPreview();
+    };
+    const composerInput = document.getElementById('spec-composer-input');
+    composerInput.addEventListener('input', () => autoResizeTextarea(composerInput));
+    composerInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); specSubmit(); }
+    });
+
+    // Load KB count on init
+    requestKbIndex().then(idx => { kbIndex = idx || []; updateKbCount(); });
+  });
+
+  // ── Primary action buttons ──
+  document.getElementById('check').onclick = () => {
+    setLoading(true);
+    parent.postMessage({ pluginMessage: { type: 'check-icons' } }, '*');
+  };
+
+  document.getElementById('outline').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'outline' } }, '*');
+  };
+
+  document.getElementById('description').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'generate-description' } }, '*');
+  };
+
+  document.getElementById('fix-all-btn').addEventListener('click', fixAll);
+
+  // ── Progress helpers ──
+  function updateProgressIndicator(text) {
+    const el = document.getElementById('progress-indicator');
+    if (el) el.textContent = text;
+  }
+  function clearProgressIndicators() { updateProgressIndicator(''); }
+
+  function clearResults() {
+    const el = document.getElementById('results');
+    if (el) el.innerHTML = '';
+  }
+  function hideResults() {
+    const el = document.getElementById('results');
+    if (el) Array.from(el.children).forEach(c => c.style.display = 'none');
+  }
+
+  // ── Jump button helper ──
+  function makeJumpBtn(nodeId) {
+    const btn = document.createElement('button');
+    btn.className = 'card__jump';
+    const label = document.createTextNode('跳转 ');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '10'); svg.setAttribute('height', '10'); svg.setAttribute('viewBox', '0 0 10 10'); svg.setAttribute('fill', 'none');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M2 2h6v6M8 2 2 8');
+    path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.3');
+    path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+    btn.appendChild(label); btn.appendChild(svg);
+    btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'select-node', nodeId } }, '*');
+    return btn;
+  }
+
+  // ── Fix button helper ──
+  function makeFixBtn(label) {
+    const btn = document.createElement('button');
+    btn.className = 'issue-row__fix';
+    btn.textContent = label;
+    return btn;
+  }
+
+  // ── Check card builder ──
+  function createCheckCard(result) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'card__header';
+
+    const nameBtn = document.createElement('button');
+    nameBtn.className = 'card__name';
+    nameBtn.textContent = result.name;
+    nameBtn.title = result.name;
+    nameBtn.onclick = () => parent.postMessage({ pluginMessage: { type: 'select-node', nodeId: result.nodeId } }, '*');
+
+    header.appendChild(nameBtn);
+    header.appendChild(makeJumpBtn(result.nodeId));
+    card.appendChild(header);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'card__body';
+
+    if (result.issues.length === 0) {
+      const row = document.createElement('div');
+      row.className = 'issue-row issue-row--pass';
+      const icon = document.createElement('span');
+      icon.className = 'issue-row__icon';
+      icon.textContent = '✓';
+      const text = document.createElement('span');
+      text.className = 'issue-row__text';
+      text.textContent = '符合规范';
+      row.appendChild(icon); row.appendChild(text);
+      body.appendChild(row);
+    } else {
+      result.issues.forEach(issue => {
+        const row = document.createElement('div');
+        row.className = 'issue-row';
+
+        const text = document.createElement('span');
+        text.className = 'issue-row__text';
+        text.textContent = issue;
+
+        row.appendChild(text);
+
+        if (issue.includes('填充规则')) {
+          const btn = makeFixBtn('修复');
+          btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'fix-fill-rule' } }, '*');
+          row.appendChild(btn);
+        }
+        if (issue.includes('constraints')) {
+          const btn = makeFixBtn('修复');
+          btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'fix-constraints' } }, '*');
+          row.appendChild(btn);
+        }
+        if (issue.includes('图层命名不规范')) {
+          const btn = makeFixBtn('修复');
+          btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'fix-vector-names' } }, '*');
+          row.appendChild(btn);
+        }
+        if (issue.includes('个可见的 Vector 图层')) {
+          const btn = makeFixBtn('修复');
+          btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'fix-vector-paths' } }, '*');
+          row.appendChild(btn);
+        }
+        if (issue.includes('相同的路径，应该删除重复路径')) {
+          const btn = makeFixBtn('修复');
+          btn.onclick = () => parent.postMessage({ pluginMessage: { type: 'fix-vector-paths' } }, '*');
+          row.appendChild(btn);
+        }
+
+        body.appendChild(row);
+
+        if (issue.includes('重复的命名')) {
+          const renameBtn = makeFixBtn('重命名');
+          row.appendChild(renameBtn);
+
+          const renameForm = document.createElement('div');
+          renameForm.className = 'rename-form';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = '输入新名称';
+          const confirmBtn = document.createElement('button');
+          confirmBtn.className = 'btn--confirm-sm';
+          confirmBtn.textContent = '确认';
+          renameForm.appendChild(input);
+          renameForm.appendChild(confirmBtn);
+
+          renameBtn.onclick = () => renameForm.classList.toggle('open');
+          confirmBtn.onclick = () => {
+            const newName = input.value.trim();
+            if (newName) {
+              parent.postMessage({ pluginMessage: { type: 'fix-name', newName } }, '*');
+              input.value = '';
+              renameForm.classList.remove('open');
+            }
+          };
+          body.appendChild(renameForm);
+        }
+      });
+    }
+
+    card.appendChild(body);
+    return card;
+  }
+
+  // ── AI card builder ──
+  function createAiCard(iconName, nodeId, imageData, description) {
+    const card = document.createElement('div');
+    card.className = 'ai-card';
+
+    const header = document.createElement('div');
+    header.className = 'ai-card__header';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'ai-card__name';
+    nameEl.textContent = iconName;
+    nameEl.title = iconName;
+    nameEl.onclick = () => parent.postMessage({ pluginMessage: { type: 'select-node', nodeId } }, '*');
+
+    header.appendChild(nameEl);
+    header.appendChild(makeJumpBtn(nodeId));
+
+    const body = document.createElement('div');
+    body.className = 'ai-card__body';
+
+    const img = document.createElement('img');
+    img.className = 'ai-card__thumb';
+    img.src = imageData;
+    img.alt = iconName;
+
+    const desc = document.createElement('div');
+    desc.className = 'ai-card__desc';
+    desc.textContent = description;
+
+    body.appendChild(img);
+    body.appendChild(desc);
+    card.appendChild(header);
+    card.appendChild(body);
+    return card;
+  }
+
+  // ── AI error card builder ──
+  function createAiErrorCard(iconName, nodeId, imageData, errorMsg, isInvalidKey) {
+    const card = document.createElement('div');
+    card.className = 'ai-card';
+
+    const header = document.createElement('div');
+    header.className = 'ai-card__header';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'ai-card__name';
+    nameEl.textContent = iconName;
+    nameEl.title = iconName;
+    nameEl.onclick = () => parent.postMessage({ pluginMessage: { type: 'select-node', nodeId } }, '*');
+    header.appendChild(nameEl);
+    header.appendChild(makeJumpBtn(nodeId));
+
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'ai-card__status';
+
+    const errMsg = document.createElement('div');
+    errMsg.className = 'ai-card__error-msg';
+    errMsg.textContent = errorMsg;
+
+    const hint = document.createElement('div');
+    hint.className = 'ai-card__error-hint';
+    hint.textContent = isInvalidKey ? '密钥无效或已过期，请重新设置 API 密钥。' : '请检查网络连接后重试。';
+
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'ai-card__retry';
+    retryBtn.textContent = '手动重试';
+    const retryKey = storeRetryData(nodeId, iconName, imageData);
+    retryBtn.onclick = () => retryFromStore(retryKey);
+
+    statusDiv.appendChild(errMsg);
+    statusDiv.appendChild(hint);
+    statusDiv.appendChild(retryBtn);
+    card.appendChild(header);
+    card.appendChild(statusDiv);
+    return card;
+  }
+
+  // ── Request queue ──
+  const requestQueue = [];
+  let isProcessingQueue = false;
+
+  async function processRequestQueue() {
+    if (isProcessingQueue || requestQueue.length === 0) return;
+    isProcessingQueue = true;
+    const request = requestQueue.shift();
+    try {
+      await analyzeImage(request.imageData, request.nodeId, request.iconName, 0);
+      updateProgressIndicator(requestQueue.length > 0 ? `正在分析: 剩余 ${requestQueue.length} 个` : '');
+      if (requestQueue.length > 0) {
+        setTimeout(() => { isProcessingQueue = false; processRequestQueue(); }, 1500);
+      } else {
+        isProcessingQueue = false;
+      }
+    } catch (e) {
+      logError(e);
+      isProcessingQueue = false;
+      setTimeout(() => processRequestQueue(), 1500);
+    }
+  }
+
+  function addToRequestQueue(imageData, nodeId, iconName) {
+    requestQueue.push({ imageData, nodeId, iconName });
+    updateProgressIndicator(`等待分析: ${requestQueue.length} 个图标`);
+    if (!isProcessingQueue) processRequestQueue();
+  }
+
+  // ── API key storage ──
+  let storedApiKey = null;
+  const IDB_DB_NAME    = 'api-key-manager';
+  const IDB_STORE_NAME = 'keys';
+  const IDB_KEY_ID     = 'encKey';
+  let apiPayloadResolver = null, apiSetResolver = null, apiDeleteResolver = null;
+  let rawKeyResolver = null, rawKeySetResolver = null;
+
+  async function openKeyDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(IDB_DB_NAME, 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE_NAME)) db.createObjectStore(IDB_STORE_NAME);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function supportsSubtle() {
+    return !!(window.crypto && window.crypto.subtle && typeof crypto.subtle.encrypt === 'function');
+  }
+
+  async function getOrCreateRawKeyBytes() {
+    try {
+      const db = await openKeyDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(IDB_STORE_NAME);
+        const getReq = store.get(IDB_KEY_ID);
+        getReq.onsuccess = () => {
+          let raw = getReq.result;
+          if (!raw) {
+            const rawBytes = new Uint8Array(32);
+            crypto.getRandomValues(rawBytes);
+            raw = rawBytes.buffer;
+            store.put(raw, IDB_KEY_ID);
+          }
+          resolve(raw);
+        };
+        getReq.onerror = () => reject(getReq.error);
+      });
+    } catch (e) {
+      const b64 = await requestRawKeyMaterial();
+      if (b64) return base64ToArrayBuffer(b64);
+      const rawBytes = new Uint8Array(32);
+      crypto.getRandomValues(rawBytes);
+      const newB64 = arrayBufferToBase64(rawBytes.buffer);
+      await setRawKeyMaterial(newB64);
+      return rawBytes.buffer;
+    }
+  }
+
+  async function getOrCreateEncryptionKey() {
+    const raw = await getOrCreateRawKeyBytes();
+    return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  }
+
+  function arrayBufferToBase64(buf) {
+    let b = '';
+    const u = new Uint8Array(buf);
+    for (let i = 0; i < u.length; i++) b += String.fromCharCode(u[i]);
+    return btoa(b);
+  }
+  function base64ToArrayBuffer(b64) {
+    const b = atob(b64);
+    const u = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return u.buffer;
+  }
+
+  async function encryptKey(plaintext) {
+    if (supportsSubtle()) {
+      const key = await getOrCreateEncryptionKey();
+      const iv = new Uint8Array(12);
+      crypto.getRandomValues(iv);
+      const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+      return `${arrayBufferToBase64(iv.buffer)}:${arrayBufferToBase64(ct)}`;
+    } else {
+      const mod = await import('https://esm.run/crypto-js@4.2.0');
+      const CryptoJS = mod.default || mod;
+      const raw = new Uint8Array(await getOrCreateRawKeyBytes());
+      const keyWA = CryptoJS.lib.WordArray.create(raw);
+      const ivWA = CryptoJS.lib.WordArray.random(16);
+      const ct = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(plaintext), keyWA, { iv: ivWA, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+      return `${CryptoJS.enc.Base64.stringify(ivWA)}:${ct.toString()}`;
+    }
+  }
+
+  async function decryptKey(payload) {
+    const [ivPart, ctPart] = String(payload).split(':');
+    if (supportsSubtle()) {
+      const key = await getOrCreateEncryptionKey();
+      const iv = new Uint8Array(base64ToArrayBuffer(ivPart));
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, base64ToArrayBuffer(ctPart));
+      return new TextDecoder().decode(pt);
+    } else {
+      const mod = await import('https://esm.run/crypto-js@4.2.0');
+      const CryptoJS = mod.default || mod;
+      const raw = new Uint8Array(await getOrCreateRawKeyBytes());
+      const keyWA = CryptoJS.lib.WordArray.create(raw);
+      const ivWA = CryptoJS.enc.Base64.parse(ivPart);
+      const dec = CryptoJS.AES.decrypt(ctPart, keyWA, { iv: ivWA, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+      return CryptoJS.enc.Utf8.stringify(dec);
+    }
+  }
+
+  function validateAthenAIKey(k) {
+    return /^sk-.{10,}$/.test(String(k).trim());
+  }
+
+  async function requestApiPayload() {
+    return new Promise(r => { apiPayloadResolver = r; parent.postMessage({ pluginMessage: { type: 'get-api-payload' } }, '*'); });
+  }
+  async function setApiPayload(payload) {
+    return new Promise(r => { apiSetResolver = r; parent.postMessage({ pluginMessage: { type: 'set-api-payload', payload } }, '*'); });
+  }
+  async function deleteApiPayload() {
+    return new Promise(r => { apiDeleteResolver = r; parent.postMessage({ pluginMessage: { type: 'delete-api-payload' } }, '*'); });
+  }
+  async function requestRawKeyMaterial() {
+    return new Promise(r => { rawKeyResolver = r; parent.postMessage({ pluginMessage: { type: 'get-raw-key-material' } }, '*'); });
+  }
+  async function setRawKeyMaterial(b64) {
+    return new Promise(r => { rawKeySetResolver = r; parent.postMessage({ pluginMessage: { type: 'set-raw-key-material', b64 } }, '*'); });
+  }
+
+  async function initApiKeyManager() {
+    try {
+      const enc = await requestApiPayload();
+      if (enc) {
+        try { storedApiKey = await decryptKey(enc); } catch { showApiError('密钥读取失败，请重新设置'); }
+      }
+      updateApiStatusDisplay();
+    } catch { showApiError('初始化密钥管理失败'); }
+  }
+
+  async function saveApiKey(k) {
+    const trimmed = String(k).trim();
+    if (!validateAthenAIKey(trimmed)) { showApiError('密钥格式不正确，应以 sk- 开头'); return false; }
+    try {
+      const payload = await encryptKey(trimmed);
+      const ok = await setApiPayload(payload);
+      if (!ok) { showApiError('密钥保存失败'); return false; }
+      storedApiKey = trimmed;
+      updateApiStatusDisplay();
+      const verified = await verifyStoredApiKey(trimmed);
+      if (!verified) { showApiError('密钥保存后校验失败，请重试'); return false; }
+      return true;
+    } catch { showApiError('密钥保存失败'); return false; }
+  }
+
+  async function verifyStoredApiKey(expected) {
+    try {
+      const enc = await requestApiPayload();
+      if (!enc) return false;
+      return (await decryptKey(enc)) === expected;
+    } catch { return false; }
+  }
+
+  async function clearApiKey() {
+    await deleteApiPayload();
+    storedApiKey = null;
+    updateApiStatusDisplay();
+  }
+
+  function showApiKeyModal() {
+    document.getElementById('api-key-modal').classList.add('open');
+    const input = document.getElementById('api-key-input');
+    const err = document.getElementById('api-key-error');
+    if (input) input.value = storedApiKey || '';
+    if (err) { err.textContent = ''; err.style.display = 'none'; }
+  }
+  function hideApiKeyModal() {
+    document.getElementById('api-key-modal').classList.remove('open');
+  }
+  function showApiError(text) {
+    const el = document.getElementById('api-key-error');
+    if (el) { el.textContent = text; el.style.display = 'block'; }
+  }
+  function updateApiStatusDisplay() {
+    const el = document.getElementById('api-status');
+    if (el) {
+      el.textContent = `当前使用: ${storedApiKey ? '已设置' : '未设置'}`;
+      el.style.display = 'block';
+      el.style.color = storedApiKey ? 'var(--text-2)' : 'var(--danger)';
+    }
+  }
+  function hideApiStatusDisplay() {
+    const el = document.getElementById('api-status');
+    if (el) el.style.display = 'none';
+  }
+
+  async function callAthenAI(base64Data, prompt) {
+    if (!storedApiKey) throw new Error('API 密钥未设置');
+    const resp = await fetch(
+      'https://athenai.mihoyo.com/v1/messages',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': storedApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 256,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: 'image/png', data: base64Data } },
+              { type: 'text', text: prompt }
+            ]
+          }]
+        })
+      }
+    );
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`${resp.status}: ${errText}`);
+    }
+    const data = await resp.json();
+    return data.content[0].text;
+  }
+
+  function toPascalCase(name) {
+    return (name || '').split(/[^a-zA-Z0-9]+/).filter(Boolean)
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+  }
+
+  // ── AI analysis ──
+  async function analyzeImage(imageData, nodeId, iconName = '未命名图标', retryCount = 0) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [2000, 5000, 10000];
+
+    switchTab('ai');
+    const emptyEl = document.getElementById('ai-empty');
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    const aiResults = document.getElementById('ai-results');
+
+    const pendingCard = document.createElement('div');
+    pendingCard.className = 'ai-card';
+    const pendingStatus = document.createElement('div');
+    pendingStatus.className = 'ai-card__status';
+    pendingStatus.textContent = (retryCount > 0 ? `正在重试 (第${retryCount}次): ` : '正在分析: ') + iconName + '…';
+    pendingCard.appendChild(pendingStatus);
+    aiResults.appendChild(pendingCard);
+
+    try {
+      updateApiStatusDisplay();
+
+      let base64Data = imageData;
+      if (typeof imageData === 'string' && imageData.startsWith('data:image')) {
+        base64Data = imageData.split(',')[1];
+      }
+
+      const PROMPT = "你现在是一个经验丰富的icon图标设计师。1.请根据图标形状，分别给出4个关联性最高的4个中文单词和4个英文单词的描述，以逗号隔开每个单词。示范：点赞，喜欢，大拇指，手，like，agree，hand，approve，除此之外不要有过多的内容。2.如果这个是个红颜色的图标，请你在生成的结果前方添加'特殊图标禁止使用'，示范：特殊图标禁止使用，点赞，喜欢，大拇指，手，like，agree，hand，approve";
+      const description = await callAthenAI(base64Data, PROMPT);
+      const pascalName = toPascalCase(iconName);
+      const finalDescription = pascalName ? `<${pascalName} />，${description}` : description;
+
+      pendingCard.replaceWith(createAiCard(iconName, nodeId, imageData, finalDescription));
+
+      parent.postMessage({ pluginMessage: { type: 'update-description', description: finalDescription, nodeId } }, '*');
+      setTimeout(() => hideApiStatusDisplay(), 3000);
+
+    } catch (error) {
+      logError(error, retryCount);
+
+      const isRetryable = error.message.includes('503') || error.message.includes('429') || error.message.includes('overloaded');
+      const isInvalidKey = error.message.includes('401') || error.message.includes('invalid api key') || error.message.includes('API 密钥未设置');
+
+      if (isRetryable && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 10000;
+        const retryStatus = document.createElement('div');
+        retryStatus.className = 'ai-card__status';
+        const errLine = document.createElement('div');
+        errLine.className = 'ai-card__error-msg';
+        errLine.textContent = '分析失败: ' + iconName;
+        const retryLine = document.createElement('div');
+        retryLine.className = 'ai-card__error-hint';
+        retryLine.textContent = `${delay / 1000} 秒后自动重试 (第${retryCount + 1}次)…`;
+        retryStatus.appendChild(errLine);
+        retryStatus.appendChild(retryLine);
+        pendingCard.innerHTML = '';
+        pendingCard.appendChild(retryStatus);
+        setTimeout(() => {
+          pendingCard.remove();
+          analyzeImage(imageData, nodeId, iconName, retryCount + 1);
+        }, delay);
+        return;
+      }
+
+      pendingCard.replaceWith(createAiErrorCard(iconName, nodeId, imageData, error.message, isInvalidKey));
+    }
+  }
+
+  // ── Fill rule editor ──
+  let fillRuleCanvas, fillRuleContext, fillRuleCurrentNode, fillRuleHover;
+  let fillRuleNonzeroColor = 'rgba(63, 159, 255, 0.25)';
+  let fillRuleEvenoddColor = 'rgba(255, 127, 0, 0.25)';
+  let fillRuleHoverNonzeroColor = fillRuleNonzeroColor;
+  let fillRuleHoverEvenoddColor = fillRuleEvenoddColor;
+  let fillRuleGeometryColor = '#777';
+  let fillRuleHoverGeometryColor = '#000';
+  let fillRuleTransformers = null;
+
+  function initFillRuleEditor() {
+    fillRuleCanvas = document.getElementById('fill-rule-canvas');
+    if (!fillRuleCanvas) return;
+    fillRuleContext = fillRuleCanvas.getContext('2d');
+    createFillRuleDiagonalPattern(fillRuleNonzeroColor, x => fillRuleNonzeroColor = x);
+    createFillRuleDiagonalPattern(fillRuleEvenoddColor, x => fillRuleEvenoddColor = x);
+    fillRuleCanvas.addEventListener('mousemove', fillRuleOnMouseMove);
+    fillRuleCanvas.addEventListener('click', fillRuleOnClick);
+    fillRuleCanvas.addEventListener('mouseleave', fillRuleOnMouseLeave);
+  }
+
+  function createFillRuleDiagonalPattern(color, callback) {
+    const img = new Image;
+    img.onload = () => callback(fillRuleContext.createPattern(img, 'repeat'));
+    img.src = 'data:image/svg+xml;base64,' + btoa(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><path fill="' + color + '" d="M0 4V0H4L12 8V12H8L0 4M12 4V0H8L12 4M0 12V8L4 12H0Z"/></svg>'
+    );
+  }
+
+  function fillRuleOnMouseMove(e) {
+    if (!fillRuleCurrentNode) return;
+    const rect = fillRuleCanvas.getBoundingClientRect();
+    fillRuleHover = fillRuleHitTest(e.clientX - rect.left, e.clientY - rect.top);
+    fillRuleCanvas.style.cursor = fillRuleHover ? 'pointer' : 'default';
+    fillRuleRender();
+  }
+
+  function fillRuleOnClick(e) {
+    if (!fillRuleCurrentNode) return;
+    const rect = fillRuleCanvas.getBoundingClientRect();
+    fillRuleHover = fillRuleHitTest(e.clientX - rect.left, e.clientY - rect.top);
+    if (fillRuleHover && fillRuleHover.type === 'loop') {
+      fillRuleCurrentNode.vectorNetwork.regions[fillRuleHover.regionIndex].loops[fillRuleHover.loopIndex].reverse();
+      showToast('循环方向已反转');
+    } else if (fillRuleHover && fillRuleHover.type === 'region') {
+      const region = fillRuleCurrentNode.vectorNetwork.regions[fillRuleHover.regionIndex];
+      region.windingRule = region.windingRule === 'NONZERO' ? 'EVENODD' : 'NONZERO';
+      showToast('填充规则已切换为: ' + (region.windingRule === 'NONZERO' ? 'Non-zero rule' : 'Even-odd rule'));
+    }
+    fillRuleRender();
+  }
+
+  function fillRuleOnMouseLeave() {
+    if (fillRuleHover) { fillRuleHover = null; fillRuleCanvas.style.cursor = 'default'; fillRuleRender(); }
+  }
+
+  function fillRuleHitTest(x, y) {
+    if (!fillRuleCurrentNode || !fillRuleCurrentNode.vectorNetwork || !fillRuleTransformers) return null;
+    const network = fillRuleCurrentNode.vectorNetwork;
+    const point = { x, y };
+    const { t, tx, ty } = fillRuleTransformers;
+
+    function hitTestLoops(threshold) {
+      let ri = 0;
+      for (const region of network.regions) {
+        let li = 0;
+        for (const loop of region.loops) {
+          for (const seg of segmentIteratorFillRule(network, loop)) {
+            if (isPointNearCubicFillRule(t(seg.s), t(seg.cs), t(seg.ce), t(seg.e), point, threshold))
+              return { type: 'loop', regionIndex: ri, loopIndex: li };
+          }
+          li++;
+        }
+        ri++;
+      }
+      return null;
+    }
+
+    const hit = hitTestLoops(2);
+    if (hit) return hit;
+    let ri = 0;
+    for (const region of network.regions) {
+      if (isPointInsideRegionFillRule(t, tx, ty, network, region, point)) return { type: 'region', regionIndex: ri };
+      ri++;
+    }
+    return hitTestLoops(5);
+  }
+
+  function isPointNearCubicFillRule(s, cs, ce, e, point, threshold) {
+    const bb = createFillRuleBoundingBox();
+    [s, cs, ce, e].forEach(p => bb.includePoint(p.x, p.y));
+    if (!bb.containsPoint(point, threshold)) return false;
+    function visit(s, cs, ce, e, depth) {
+      if (depth < 4) {
+        const [[s1,cs1,ce1,e1],[s2,cs2,ce2,e2]] = subdivideCubicFillRule(s,cs,ce,e);
+        return visit(s1,cs1,ce1,e1,depth+1) || visit(s2,cs2,ce2,e2,depth+1);
+      }
+      const xse=e.x-s.x, yse=e.y-s.y, xsp=point.x-s.x, ysp=point.y-s.y;
+      const t = Math.max(0, Math.min(1, (xse*xsp + yse*ysp) / (xse*xse + yse*yse)));
+      const dx=s.x+xse*t-point.x, dy=s.y+yse*t-point.y;
+      return dx*dx + dy*dy < threshold*threshold;
+    }
+    return visit(s, cs, ce, e, 0);
+  }
+
+  function isPointInsideRegionFillRule(t, tx, ty, network, region, point) {
+    const bb = createFillRuleBoundingBox();
+    for (const loop of region.loops)
+      for (const {s,cs,ce,e} of segmentIteratorFillRule(network, loop))
+        [s,cs,ce,e].forEach(p => bb.includePoint(tx(p.x), ty(p.y)));
+    if (!bb.containsPoint(point, 0)) return false;
+    let crossingCount = 0;
+    function visit(s, cs, ce, e, depth) {
+      const xmax=Math.max(s.x,cs.x,ce.x,e.x), ymin=Math.min(s.y,cs.y,ce.y,e.y), ymax=Math.max(s.y,cs.y,ce.y,e.y);
+      if (point.x > xmax || point.y < ymin || point.y > ymax) return;
+      if (depth < 4) {
+        const [[s1,cs1,ce1,e1],[s2,cs2,ce2,e2]] = subdivideCubicFillRule(s,cs,ce,e);
+        visit(s1,cs1,ce1,e1,depth+1); visit(s2,cs2,ce2,e2,depth+1); return;
+      }
+      if (s.y <= point.y && point.y < e.y) {
+        if ((point.y-s.y)*(e.x-s.x) - (point.x-s.x)*(e.y-s.y) > 0) crossingCount++;
+      } else if (e.y <= point.y && point.y < s.y) {
+        if ((point.y-s.y)*(e.x-s.x) - (point.x-s.x)*(e.y-s.y) < 0) crossingCount--;
+      }
+    }
+    for (const loop of region.loops)
+      for (const {s,cs,ce,e} of segmentIteratorFillRule(network, loop))
+        visit(t(s), t(cs), t(ce), t(e), 0);
+    if (region.windingRule === 'EVENODD') crossingCount &= 1;
+    return crossingCount !== 0;
+  }
+
+  function midpointFillRule(a, b) { return { x: (a.x+b.x)/2, y: (a.y+b.y)/2 }; }
+
+  function subdivideCubicFillRule(a, b, c, d) {
+    const ab=midpointFillRule(a,b), bc=midpointFillRule(b,c), cd=midpointFillRule(c,d);
+    const abc=midpointFillRule(ab,bc), bcd=midpointFillRule(bc,cd), abcd=midpointFillRule(abc,bcd);
+    return [[a,ab,abc,abcd],[abcd,bcd,cd,d]];
+  }
+
+  function createFillRuleBoundingBox() {
+    return {
+      xmin: Infinity, ymin: Infinity, xmax: -Infinity, ymax: -Infinity,
+      includePoint(x, y) {
+        this.xmin=Math.min(this.xmin,x); this.ymin=Math.min(this.ymin,y);
+        this.xmax=Math.max(this.xmax,x); this.ymax=Math.max(this.ymax,y);
+      },
+      containsPoint(p, t) {
+        return p.x>=this.xmin-t && p.y>=this.ymin-t && p.x<=this.xmax+t && p.y<=this.ymax+t;
+      }
+    };
+  }
+
+  function createFillRuleTransformers(network, cw, ch) {
+    const bb = createFillRuleBoundingBox();
+    for (const v of network.vertices) bb.includePoint(v.x, v.y);
+    for (const s of network.segments) {
+      const sv=network.vertices[s.start], ev=network.vertices[s.end];
+      bb.includePoint(sv.x+s.tangentStart.x, sv.y+s.tangentStart.y);
+      bb.includePoint(ev.x+s.tangentEnd.x, ev.y+s.tangentEnd.y);
+    }
+    const adjustedH = ch - 100;
+    const cx = (bb.xmin+bb.xmax)/2, cy = (bb.ymin+bb.ymax)/2;
+    const scale = Math.min((cw-40)/(bb.xmax-bb.xmin||1), (adjustedH-40)/(bb.ymax-bb.ymin||1));
+    function tx(x) { return cw/2 + (x-cx)*scale; }
+    function ty(y) { return adjustedH/2 + (y-cy)*scale; }
+    function t(p) { return { x: tx(p.x), y: ty(p.y) }; }
+    return { t, tx, ty };
+  }
+
+  function fillRuleRender() {
+    if (!fillRuleCurrentNode || !fillRuleCanvas) return;
+    const ctx = fillRuleContext;
+    const rect = fillRuleCanvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    fillRuleCanvas.width = Math.round(rect.width * ratio);
+    fillRuleCanvas.height = Math.round(rect.height * ratio);
+    ctx.scale(ratio, ratio);
+    const cw = rect.width, ch = rect.height;
+    ctx.clearRect(0, 0, cw, ch);
+    if (!fillRuleCurrentNode.vectorNetwork) { showFillRuleInstructions(ctx, cw, ch); return; }
+    const network = fillRuleCurrentNode.vectorNetwork;
+    fillRuleTransformers = createFillRuleTransformers(network, cw, ch);
+    renderFillRuleRegions(ctx, network, fillRuleTransformers);
+    renderFillRuleGeometry(ctx, network, fillRuleTransformers);
+    renderFillRuleLoopIndicators(ctx, network, fillRuleTransformers);
+    renderFillRuleLegend(ctx, cw, ch);
+  }
+
+  function showFillRuleInstructions(ctx, cw, ch) {
+    ctx.fillStyle = '#888'; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    const lines = [
+      '选中向量对象后，点击填充区域切换填充规则 (NONZERO / EVENODD)，',
+      '点击路径线条可反转循环方向。'
+    ];
+    lines.forEach((l, i) => ctx.fillText(l, 20, 40 + i*18));
+  }
+
+  function* segmentIteratorFillRule(network, loop) {
+    let start = startingVertexFillRule(network, loop);
+    for (const index of loop) {
+      const segment = network.segments[index];
+      const end = otherVertexFillRule(segment, start);
+      const ts = tangentForVertexFillRule(segment, start);
+      const te = tangentForVertexFillRule(segment, end);
+      const s = network.vertices[start], e = network.vertices[end];
+      yield { s, cs: { x: s.x+ts.x, y: s.y+ts.y }, ce: { x: e.x+te.x, y: e.y+te.y }, e };
+      start = end;
+    }
+  }
+
+  function startingVertexFillRule(network, loop) {
+    if (loop.length === 1) return network.segments[loop[0]].start;
+    const first = network.segments[loop[0]], second = network.segments[loop[1]];
+    let ts = hasVertexFillRule(second, first.end), te = hasVertexFillRule(second, first.start);
+    if (ts && te && loop.length > 2) ts = hasVertexFillRule(network.segments[loop[2]], first.start);
+    if (ts) return first.start;
+    if (te) return first.end;
+    throw new Error('Failure in startingVertex');
+  }
+
+  function hasVertexFillRule(seg, i) { return seg.start === i || seg.end === i; }
+  function tangentForVertexFillRule(seg, i) {
+    if (i === seg.start) return seg.tangentStart;
+    if (i === seg.end) return seg.tangentEnd;
+    throw new Error('Failure in tangentForVertex');
+  }
+  function otherVertexFillRule(seg, i) {
+    if (i === seg.start) return seg.end;
+    if (i === seg.end) return seg.start;
+    throw new Error('Failure in otherVertex');
+  }
+
+  function renderFillRuleRegions(ctx, network, { tx, ty }) {
+    let ri = 0;
+    for (const region of network.regions) {
+      const hov = fillRuleHover && fillRuleHover.type === 'region' && fillRuleHover.regionIndex === ri;
+      ctx.fillStyle = region.windingRule === 'NONZERO'
+        ? (hov ? fillRuleHoverNonzeroColor : fillRuleNonzeroColor)
+        : (hov ? fillRuleHoverEvenoddColor : fillRuleEvenoddColor);
+      ctx.beginPath();
+      for (const loop of region.loops) outlineFillRuleLoop(ctx, tx, ty, network, loop);
+      ctx.fill(region.windingRule.toLowerCase());
+      ri++;
+    }
+  }
+
+  function outlineFillRuleLoop(ctx, tx, ty, network, loop) {
+    let first = true;
+    for (const { s, cs, ce, e } of segmentIteratorFillRule(network, loop)) {
+      if (first) { ctx.moveTo(tx(s.x), ty(s.y)); first = false; }
+      ctx.bezierCurveTo(tx(cs.x), ty(cs.y), tx(ce.x), ty(ce.y), tx(e.x), ty(e.y));
+    }
+  }
+
+  function renderFillRuleGeometry(ctx, network, { tx, ty }) {
+    ctx.strokeStyle = fillRuleGeometryColor; ctx.lineWidth = 1;
+    for (const seg of network.segments) {
+      const sv = network.vertices[seg.start], ev = network.vertices[seg.end];
+      ctx.beginPath();
+      ctx.moveTo(tx(sv.x), ty(sv.y));
+      ctx.bezierCurveTo(
+        tx(sv.x+seg.tangentStart.x), ty(sv.y+seg.tangentStart.y),
+        tx(ev.x+seg.tangentEnd.x),   ty(ev.y+seg.tangentEnd.y),
+        tx(ev.x), ty(ev.y)
+      );
+      ctx.stroke();
+    }
+    ctx.fillStyle = fillRuleGeometryColor;
+    for (const v of network.vertices) { ctx.beginPath(); ctx.arc(tx(v.x), ty(v.y), 2, 0, Math.PI*2); ctx.fill(); }
+  }
+
+  function renderFillRuleLoopIndicators(ctx, network, { tx, ty }) {
+    let ri = 0;
+    for (const region of network.regions) {
+      let li = 0;
+      for (const loop of region.loops) {
+        const hov = fillRuleHover && fillRuleHover.type === 'loop' && fillRuleHover.regionIndex === ri && fillRuleHover.loopIndex === li;
+        ctx.fillStyle = hov ? fillRuleHoverGeometryColor : fillRuleGeometryColor;
+        for (const { s, cs, ce, e } of segmentIteratorFillRule(network, loop)) {
+          const t = 0.5;
+          const x = tx(cubic1DFillRule(s.x, cs.x, ce.x, e.x, t));
+          const y = ty(cubic1DFillRule(s.y, cs.y, ce.y, e.y, t));
+          let dx = cubicDerivative1DFillRule(s.x, cs.x, ce.x, e.x, t);
+          let dy = cubicDerivative1DFillRule(s.y, cs.y, ce.y, e.y, t);
+          const len = Math.sqrt(dx*dx + dy*dy); dx *= 3/len; dy *= 3/len;
+          ctx.beginPath(); ctx.moveTo(x+dx, y+dy); ctx.lineTo(x-dx-dy, y-dy+dx); ctx.lineTo(x-dx+dy, y-dy-dx); ctx.fill();
+          if (hov) {
+            ctx.strokeStyle = fillRuleHoverGeometryColor; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(tx(s.x), ty(s.y));
+            ctx.bezierCurveTo(tx(cs.x), ty(cs.y), tx(ce.x), ty(ce.y), tx(e.x), ty(e.y)); ctx.stroke();
+          }
+        }
+        li++;
+      }
+      ri++;
+    }
+  }
+
+  function cubic1DFillRule(a, b, c, d, t) { const s=1-t; return a*s*s*s + b*3*s*s*t + c*3*s*t*t + d*t*t*t; }
+  function cubicDerivative1DFillRule(a, b, c, d, t) { const s=1-t; return (b-a)*3*s*s + (c-b)*6*s*t + (d-c)*3*t*t; }
+
+  function renderFillRuleLegend(ctx, cw, ch) {
+    const lx=150, ly=ch-80, bs=20, sp=8;
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle = fillRuleNonzeroColor; ctx.beginPath(); ctx.rect(lx,ly,bs,bs); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = fillRuleEvenoddColor; ctx.beginPath(); ctx.rect(lx,ly+bs+sp,bs,bs); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'black'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('Non-zero rule', lx+bs+sp, ly+bs/2);
+    ctx.fillText('Even-odd rule', lx+bs+sp, ly+bs*1.5+sp);
+  }
+
+  function showFillRuleEditor(nodeData) {
+    document.getElementById('fill-rule-modal').classList.add('open');
+    fillRuleCurrentNode = nodeData;
+    fillRuleRender();
+  }
+
+  function closeFillRuleEditor() {
+    document.getElementById('fill-rule-modal').classList.remove('open');
+    fillRuleCurrentNode = null;
+    fillRuleHover = null;
+  }
+
+  function applyFillRules() {
+    if (fillRuleCurrentNode && fillRuleCurrentNode.vectorNetwork) {
+      parent.postMessage({
+        pluginMessage: { type: 'apply-fill-rules', nodeId: fillRuleCurrentNode.id, vectorNetwork: fillRuleCurrentNode.vectorNetwork }
+      }, '*');
+      showToast('填充规则已应用');
+    }
+    closeFillRuleEditor();
+  }
+
+  // ── Fix-all helpers ──
+
+  function requestNodeImages(nodeIds) {
+    return new Promise(resolve => {
+      nodeImagesResolver = resolve;
+      parent.postMessage({ pluginMessage: { type: 'get-node-images', nodeIds } }, '*');
+    });
+  }
+
+  async function getAiRenameSuggestion(imageData, currentName, nodeId) {
+    try {
+      let base64Data = imageData;
+      if (typeof base64Data === 'string' && base64Data.startsWith('data:image')) {
+        base64Data = base64Data.split(',')[1];
+      }
+      const prompt = `你是一个 Figma 图标命名专家。
+当前图标命名为 "${currentName}"，与其他图标存在重复命名冲突。
+请仔细观察图标的形状和视觉含义，根据以下规则生成一个新的唯一名称：
+
+1. 保留当前名称的前缀风格（例如当前名称以 "outlined-" 开头，新名称也应以 "outlined-" 开头；以 "filled-" 开头则保留 "filled-"；若无明显前缀则维持原样）。
+2. 只修改表示语义的部分，用更精确的词描述图标的具体含义（如动作方向、具体对象）。
+3. 全小写英文，单词之间用连字符（-）分隔，整体 2-4 个词，例如 "outlined-phone-incoming"。
+4. 只返回新名称本身，不要任何解释或标点。`;
+      const name = (await callAthenAI(base64Data, prompt)).trim().replace(/['"]/g, '').split('\n')[0].trim();
+      return name || (currentName + '-' + nodeId.slice(-4));
+    } catch (e) {
+      return currentName + '-' + nodeId.slice(-4);
+    }
+  }
+
+  async function fixAll() {
+    const btn = document.getElementById('fix-all-btn');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = '修复中...';
+
+    const allNodeIds = currentCheckResults.map(r => r.nodeId);
+    const renameTargets = currentCheckResults.filter(r =>
+      r.issues && r.issues.some(i => i.includes('重复的命名'))
+    );
+
+    let renames = [];
+    if (renameTargets.length > 0) {
+      try {
+        const images = await requestNodeImages(renameTargets.map(r => r.nodeId));
+        for (const item of images) {
+          const target = renameTargets.find(r => r.nodeId === item.nodeId);
+          const currentName = target ? target.name : (item.name || '');
+          const newName = await getAiRenameSuggestion(item.imageData, currentName, item.nodeId);
+          renames.push({ nodeId: item.nodeId, newName });
+        }
+      } catch (e) {
+        renames = renameTargets.map(r => ({ nodeId: r.nodeId, newName: r.name + '-' + r.nodeId.slice(-4) }));
+      }
+    }
+
+    parent.postMessage({ pluginMessage: { type: 'fix-all', nodeIds: allNodeIds, renames } }, '*');
+  }
+
+  // ── Message handler ──
+  window.onmessage = null;
+  window.addEventListener('message', e => {
+    const msg = e.data.pluginMessage;
+    if (!msg) return;
+    log('收到消息:', msg);
+
+    switch (msg.type) {
+      case 'init-complete':
+        setLoading(false);
+        break;
+
+      case 'start-loading':
+        requestAnimationFrame(() => setLoading(true));
+        break;
+
+      case 'start-batch-analysis':
+        hideResults();
+        clearProgressIndicators();
+        break;
+
+      case 'check-results': {
+        const results = msg.results;
+        const container = document.getElementById('results');
+        try {
+          if (!msg.isPartial || msg.current === 1) {
+            container.innerHTML = '';
+            currentCheckResults = [];
+          }
+          if (msg.total) {
+            const issueCount = results.filter(r => r.hasIssues).length;
+            updateProgressIndicator(msg.current + '/' + msg.total + (issueCount > 0 ? ' · ' + issueCount + ' 个有问题' : ''));
+          }
+          results.forEach(result => {
+            container.appendChild(createCheckCard(result));
+            currentCheckResults.push(result);
+          });
+          if (!msg.isPartial) {
+            setLoading(false);
+            const hasFixable = currentCheckResults.some(r => r.issues && r.issues.length > 0);
+            const bar = document.getElementById('fix-all-bar');
+            if (hasFixable) bar.classList.remove('hidden');
+            else bar.classList.add('hidden');
+            const btn = document.getElementById('fix-all-btn');
+            btn.disabled = false;
+            btn.querySelector('.btn-text').textContent = '一键修复';
+          }
+        } catch (err) {
+          logError(err);
+          setLoading(false);
+        }
+        break;
+      }
+
+      case 'error':
+        logError(msg.message);
+        setLoading(false);
+        break;
+
+      case 'open-fill-rule-editor':
+        if (msg.node && msg.node.vectorNetwork) {
+          fillRuleCurrentNode = msg.node;
+          showFillRuleEditor(msg.node);
+        } else {
+          showFillRuleEditor();
+        }
+        break;
+
+      case 'show-fill-rule-editor':
+        showFillRuleEditor(msg.paths);
+        break;
+
+      case 'confirm-fill-rule-fix':
+        if (confirm(msg.message)) {
+          parent.postMessage({ pluginMessage: { type: 'confirm-fix-fill-rule', confirmed: true } }, '*');
+        } else {
+          parent.postMessage({ pluginMessage: { type: 'confirm-fix-fill-rule', confirmed: false } }, '*');
+        }
+        break;
+
+      case 'analyze': {
+        let imgData = msg.imageData;
+        if (typeof imgData === 'string' && !imgData.startsWith('data:image')) {
+          imgData = 'data:image/png;base64,' + imgData;
+        }
+        const aiContainer = document.getElementById('ai-results');
+        if (msg.current === 1) {
+          aiContainer.innerHTML = '';
+          clearProgressIndicators();
+        }
+        if (!imgData) {
+          const errCard = document.createElement('div');
+          errCard.className = 'ai-card';
+          const errStatus = document.createElement('div');
+          errStatus.className = 'ai-card__status ai-card__error-msg';
+          errStatus.textContent = '图标数据为空，无法分析。';
+          errCard.appendChild(errStatus);
+          aiContainer.appendChild(errCard);
+          return;
+        }
+        addToRequestQueue(imgData, msg.nodeId, msg.name);
+        break;
+      }
+
+      case 'node-images':
+        if (nodeImagesResolver) { nodeImagesResolver(msg.items); nodeImagesResolver = null; }
+        break;
+
+      case 'api-payload':
+        if (apiPayloadResolver) { apiPayloadResolver(msg.payload); apiPayloadResolver = null; }
+        break;
+      case 'api-set-result':
+        if (apiSetResolver) { apiSetResolver(!!msg.ok); apiSetResolver = null; }
+        break;
+      case 'api-delete-result':
+        if (apiDeleteResolver) { apiDeleteResolver(!!msg.ok); apiDeleteResolver = null; }
+        break;
+      case 'raw-key':
+        if (rawKeyResolver) { rawKeyResolver(msg.b64); rawKeyResolver = null; }
+        break;
+      case 'raw-key-set':
+        if (rawKeySetResolver) { rawKeySetResolver(!!msg.ok); rawKeySetResolver = null; }
+        break;
+
+      // ── Spec tab message handlers ──
+      case 'component-info':
+        if (msg.source === 'selectionchange') {
+          if (!msg.error) updateComponentBar(msg.data);
+          // 取消选中或选中非组件时，保留已有数据，不清空对话
+        } else {
+          if (msg.error) {
+            updateComponentBar(null);
+          } else {
+            // Preserve existing screenshot (effect example) when refreshing for spec-generate
+            const incoming = msg.source === 'spec-generate' && specComponentData
+              ? Object.assign({}, msg.data, { screenshot: specComponentData.screenshot || msg.data.screenshot })
+              : msg.data;
+            updateComponentBar(incoming);
+          }
+          if (componentInfoResolver && componentInfoResolver.source === msg.source) {
+            const resolver = componentInfoResolver;
+            componentInfoResolver = null;
+            if (msg.error) resolver.reject(new Error(msg.error));
+            else resolver.resolve(specComponentData);
+          }
+        }
+        break;
+
+      case 'kb-index':
+        if (kbIndexResolver) { kbIndexResolver(msg.index || []); kbIndexResolver = null; }
+        break;
+
+      case 'kb-chunk':
+        if (kbChunkResolver) { kbChunkResolver(msg.value); kbChunkResolver = null; }
+        break;
+
+      case 'kb-chunk-set':
+        if (kbChunkSetResolver) { kbChunkSetResolver({ ok: msg.ok }); kbChunkSetResolver = null; }
+        break;
+
+      case 'kb-delete-result':
+        if (kbDeleteResolver) { kbDeleteResolver({ ok: msg.ok }); kbDeleteResolver = null; }
+        break;
+
+      case 'kb-clear-result':
+        // Just acknowledge
+        break;
+
+      case 'kb-vec':
+        if (kbVecResolver) { kbVecResolver(msg.value); kbVecResolver = null; }
+        break;
+
+      case 'kb-vec-set':
+        if (kbVecSetResolver) { kbVecSetResolver({ ok: msg.ok }); kbVecSetResolver = null; }
+        break;
+
+      case 'kb-index-set':
+        // Acknowledge index set
+        break;
+
+      case 'spec-frame-created':
+        if (msg.ok) {
+          showToast('设计规范已写入 Figma: ' + (msg.frameName || ''));
+        } else {
+          showToast('写入失败: ' + (msg.error || '未知错误'), 'error');
+        }
+        if (latestSpecMarkdown) document.getElementById('spec-composer-write-btn').classList.remove('hidden');
+        break;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useCallback } from "react"
+import Link from "next/link"
 import { useMotionValue } from "framer-motion"
 import FloatingShowcaseImage from "@/components/floating-showcase-image"
 import { colors, fonts } from "@/lib/design-tokens"
@@ -34,35 +35,50 @@ function CompanyLogo() {
   )
 }
 
-function TextEmbbedIcon({ rotation = 0 }: { rotation?: number }) {
+function TextEmbbedIcon({ rotation = 0, imageSrc }: { rotation?: number; imageSrc?: string }) {
   return (
     <span
       style={{
         display: "inline-block",
-        width: 32,
-        height: 24,
+        width: imageSrc ? 38 : 32,
+        height: imageSrc ? 29 : 24,
         borderRadius: 112,
         overflow: "hidden",
         backgroundColor: colors.dark[400],
         border: `1px solid ${colors.dark[50]}`,
         verticalAlign: "middle",
         position: "relative",
-        transform: `rotate(${rotation}deg)`,
+        transform: imageSrc ? "none" : `rotate(${rotation}deg)`,
         marginLeft: 4,
         flexShrink: 0,
       }}
     >
-      <span
-        style={{
-          position: "absolute",
-          width: 13,
-          height: 35,
-          top: -30,
-          left: -50,
-          backgroundColor: "rgba(255, 255, 255, 0.53)",
-          transform: "rotate(26deg)",
-        }}
-      />
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "50% 50%",
+            transform: "scale(2)",
+            transformOrigin: "50% 30%",
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            position: "absolute",
+            width: 13,
+            height: 35,
+            top: -30,
+            left: -50,
+            backgroundColor: "rgba(255, 255, 255, 0.53)",
+            transform: "rotate(26deg)",
+          }}
+        />
+      )}
     </span>
   )
 }
@@ -165,11 +181,10 @@ export default function Home() {
           }}
         >
           Hi，我叫{" "}
-          <span style={{ fontWeight: 500, color: "#FF9191" }}>白子煜</span>
-          <TextEmbbedIcon rotation={8} />
+          <Link href="/about-us" style={{ fontWeight: 500, color: "#FF9191", textDecoration: "none" }}>白子煜</Link>
+          <TextEmbbedIcon rotation={8} imageSrc="/img/about-us/BJdnkVSaKuHEVB3S7uHPJok6aNA.jpeg" />
           {" "}有着{" "}
-          <span style={{ fontWeight: 400, color: "#DDE83F" }}>四年工作经验</span>
-          <TextEmbbedIcon rotation={-15} />
+          <Link href="/about-us" style={{ fontWeight: 500, color: "#DDE83F", textDecoration: "none" }}>四年工作经验</Link>
           {" "}<span style={{ whiteSpace: "nowrap" }}>目前就职于<CompanyLogo />的</span> UX 设计师一枚
         </h1>
       </article>

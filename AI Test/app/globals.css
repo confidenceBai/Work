@@ -130,6 +130,64 @@ body {
   }
 }
 
+/* Contact page responsive - Tablet (810-1199px) */
+@media (max-width: 1199.98px) and (min-width: 810px) {
+  .contact-page > div {
+    padding: 176px 32px 144px !important;
+  }
+
+  .contact-page-inner {
+    gap: 32px !important;
+  }
+
+  .contact-page-inner section {
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+
+  .contact-page-inner h1 {
+    font-size: 32px !important;
+  }
+
+  .chat-icon-decoration {
+    display: none !important;
+  }
+}
+
+/* Contact page responsive - Mobile (<810px) */
+@media (max-width: 809.98px) {
+  .contact-page > div {
+    padding: 144px 24px 144px !important;
+  }
+
+  .contact-page-inner {
+    gap: 24px !important;
+  }
+
+  .contact-page-inner section {
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+
+  .contact-page-inner h1 {
+    font-size: 32px !important;
+  }
+
+  .contact-form-row {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .contact-form-row > div:first-child {
+    width: 100% !important;
+    max-width: 157px !important;
+  }
+
+  .chat-icon-decoration {
+    display: none !important;
+  }
+}
+
 @layer components {
   .text-h1 {
     font-family: var(--font-sans);

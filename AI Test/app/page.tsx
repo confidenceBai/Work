@@ -1,10 +1,10 @@
 "use client"
 
-import { useRef, useCallback } from "react"
+import { useRef, useCallback, useState, useEffect } from "react"
 import Link from "next/link"
-import { useMotionValue } from "framer-motion"
+import { useMotionValue, AnimatePresence } from "framer-motion"
 import FloatingShowcaseImage from "@/components/floating-showcase-image"
-import { colors, fonts } from "@/lib/design-tokens"
+import { colors, fonts, shadows } from "@/lib/design-tokens"
 
 function CompanyLogo() {
   return (
@@ -50,6 +50,7 @@ function TextEmbbedIcon({ rotation = 0, imageSrc }: { rotation?: number; imageSr
         position: "relative",
         transform: imageSrc ? "none" : `rotate(${rotation}deg)`,
         marginLeft: 4,
+        marginBottom: 3,
         flexShrink: 0,
       }}
     >
@@ -89,13 +90,26 @@ const FLOATING_IMAGES = [
   { rotation: 11,  style: { top: 110, left: -79 },                 imageSrc: "/img/抽奖/封面.jpeg",      href: "/work/lottery" },
   { rotation: -9,  style: { bottom: -94, left: -5 },               imageSrc: "/img/Rooms/封面.png",      href: "/work/wave-rooms" },
   { rotation: 15,  style: { bottom: -104, left: 796 },             imageSrc: "/img/HoYoWave/封面.png",   href: "/work/hoyowave" },
-  { rotation: -15, style: { top: 68, right: -102 },                imageSrc: "/img/CC/封面.png",         href: "/work/component-checker" },
+  { rotation: -15, style: { top: 68, right: -102 },                imageSrc: "/img/meitu-pro/封面.png",   href: "/work/meitu-pro" },
 ] as const
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false)
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    setMatches(mql.matches)
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
+  }, [query])
+  return matches
+}
 
 export default function Home() {
   const containerRef = useRef<HTMLElement>(null)
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -132,28 +146,32 @@ export default function Home() {
           zIndex: 4,
         }}
       >
-        {FLOATING_IMAGES.map((img, i) => (
-          <FloatingShowcaseImage
-            key={i}
-            rotation={img.rotation}
-            style={img.style as React.CSSProperties}
-            mouseX={mouseX}
-            mouseY={mouseY}
-            imageSrc={img.imageSrc}
-            href={img.href}
-          />
-        ))}
+        <AnimatePresence>
+          {!isMobile && FLOATING_IMAGES.map((img, i) => (
+            <FloatingShowcaseImage
+              key={i}
+              index={i}
+              rotation={img.rotation}
+              style={img.style as React.CSSProperties}
+              mouseX={mouseX}
+              mouseY={mouseY}
+              imageSrc={img.imageSrc}
+              href={img.href}
+            />
+          ))}
+        </AnimatePresence>
       </div>
 
       <article
+        className="hero-card"
         style={{
           position: "relative",
           zIndex: 4,
-          width: 480,
-          minWidth: 480,
+          width: "100%",
           maxWidth: 480,
           borderRadius: 24,
           backgroundColor: colors.dark[700],
+          boxShadow: shadows.ambient8,
           borderTopWidth: 1,
           borderLeftWidth: 1,
           borderRightWidth: 0,
@@ -181,10 +199,10 @@ export default function Home() {
           }}
         >
           Hi，我叫{" "}
-          <Link href="/about-us" style={{ fontWeight: 500, color: "#FF9191", textDecoration: "none" }}>白子煜</Link>
-          <TextEmbbedIcon rotation={8} imageSrc="/img/about-us/BJdnkVSaKuHEVB3S7uHPJok6aNA.jpeg" />
+          <Link href="/about-us" data-no-glow style={{ fontWeight: 500, color: "#FF9191", textDecoration: "none" }}>白子煜</Link>
+          <Link href="/about-us" data-no-glow style={{ display: "inline-flex", verticalAlign: "middle" }}><TextEmbbedIcon rotation={8} imageSrc="/img/about-us/BJdnkVSaKuHEVB3S7uHPJok6aNA.jpeg" /></Link>
           {" "}有着{" "}
-          <Link href="/about-us" style={{ fontWeight: 500, color: "#DDE83F", textDecoration: "none" }}>四年工作经验</Link>
+          <Link href="/about-us#experience" data-no-glow style={{ fontWeight: 500, color: "#DDE83F", textDecoration: "none" }}>三年工作经验</Link>
           {" "}<span style={{ whiteSpace: "nowrap" }}>目前就职于<CompanyLogo />的</span> UX 设计师一枚
         </h1>
       </article>

@@ -1,21 +1,25 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { colors, styles as tokenStyles, shadows, fonts, text } from "@/lib/design-tokens"
+import PageTransition from "@/components/page-transition"
 
 /* ─── Section Card ─── */
 function SectionCard({
   children,
+  id,
   className = "",
   style,
 }: {
   children: React.ReactNode
+  id?: string
   className?: string
   style?: React.CSSProperties
 }) {
   return (
     <section
+      id={id}
       className={className}
       style={{
         backgroundColor: colors.dark[700],
@@ -114,7 +118,7 @@ function AboutUserSection() {
             <br />
             <p style={{ margin: 0 }}>
               我毕业于福州大学环境设计专业。目前在米哈游企业效能组担任 UX
-              设计师，有着四年的工作经验（含一年实习）
+              设计师，有着三年正式工作经验
             </p>
             <br />
             <p style={{ margin: 0 }}>
@@ -129,25 +133,30 @@ function AboutUserSection() {
 }
 
 /* ─── Experience Entry ─── */
+type ProjectItem = { title: string; desc: string }
+
 function ExperienceEntry({
   date,
   title,
   icon,
+  projects,
   description,
   image,
+  href,
 }: {
   date: string
   title: string
   icon?: React.ReactNode
-  description: React.ReactNode
+  projects?: ProjectItem[]
+  description?: React.ReactNode
   image?: { src: string; alt?: string }
+  href?: string
 }) {
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "row",
-        gap: 16,
+        gap: 8,
         width: "100%",
         alignItems: "flex-start",
       }}
@@ -158,9 +167,9 @@ function ExperienceEntry({
         className="text-body-medium"
         style={{
           margin: 0,
+          width: "25%",
+          minWidth: 90,
           flex: "none",
-          width: 130,
-          maxWidth: 130,
           color: "var(--color-neutral-300)",
         }}
       >
@@ -173,7 +182,7 @@ function ExperienceEntry({
           display: "flex",
           flexDirection: "column",
           flex: 1,
-          gap: 2,
+          gap: 4,
           minWidth: 0,
         }}
       >
@@ -181,10 +190,8 @@ function ExperienceEntry({
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
             alignItems: "center",
             gap: 8,
-            flexWrap: "wrap",
             width: "100%",
           }}
         >
@@ -196,37 +203,61 @@ function ExperienceEntry({
           </p>
           {icon}
           {image && (
-            <div
-              style={{
-                width: 60,
-                height: 18,
-                borderRadius: 4,
-                overflow: "hidden",
-                flex: "none",
-              }}
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-no-glow
+              style={{ cursor: "pointer", lineHeight: 0 }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image.src}
-                alt={image.alt ?? ""}
+              <div
                 style={{
-                  display: "block",
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
+                  width: 60,
+                  height: 18,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  flex: "none",
                 }}
-              />
-            </div>
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.src}
+                  alt={image.alt ?? ""}
+                  data-no-lightbox
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              </div>
+            </a>
           )}
         </div>
 
         {/* Description */}
-        <div
-          className="text-body"
-          style={{ margin: 0, color: "var(--color-neutral-400)", width: "100%" }}
-        >
-          {description}
-        </div>
+        {projects ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+            {projects.map((p, i) => (
+              <div key={i}>
+                <p style={{ margin: 0, fontWeight: 600, color: "var(--color-neutral-50)", fontSize: 14, lineHeight: "20px", opacity: 0.85 }}>
+                  {i + 1}. {p.title}
+                </p>
+                <p style={{ margin: "2px 0 0", color: "var(--color-neutral-400)", fontSize: 14, lineHeight: "20px" }}>
+                  {p.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            className="text-body"
+            style={{ margin: 0, color: "var(--color-neutral-400)", width: "100%", fontSize: 14, lineHeight: "20px" }}
+          >
+            {description}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -235,7 +266,7 @@ function ExperienceEntry({
 /* ─── Experiences Section ─── */
 function ExperiencesSection() {
   return (
-    <SectionCard>
+    <SectionCard id="experience">
       <h2
         className="text-capitalized"
         style={{ margin: 0, color: "var(--color-neutral-300)", textAlign: "left", width: "100%" }}
@@ -255,25 +286,41 @@ function ExperiencesSection() {
         <ExperienceEntry
           date="2023 — 至今"
           title="米哈游/企业效能组 - UX 设计师"
-          icon={<MihoyoLogo />}
-          description={
-            <ul style={{ margin: 0, paddingLeft: 20, listStyle: "disc" }}>
-              <li>2025 - 2026 支持人事业务线设计工作（重点负责盘人盘事功能模块）</li>
-              <li>2023 - 2025 支持 HoYoWave 线设计工作（重点负责 IM、VC、会控设备、工作台功能模块）</li>
-              <li>2023 - 至今 负责团队组件维护工作</li>
-            </ul>
+          icon={
+            <a href="https://www.mihoyo.com/en/" target="_blank" rel="noopener noreferrer" data-no-glow style={{ cursor: "pointer", lineHeight: 0, display: "flex" }}>
+              <MihoyoLogo />
+            </a>
           }
+          projects={[
+            {
+              title: "人事系统",
+              desc: "重点负责 Leader 画布工具、编制盘点、人员档案功能模块，在各类需求中使用 AI 工具生成 Demo 帮助产品决策",
+            },
+            {
+              title: "HoYoWave",
+              desc: "重点负责 IM、VC、会议室控制器、开放平台功能模块",
+            },
+            {
+              title: "米哈游员工抽奖系统",
+              desc: "独立支持抽奖系统 UI、动画制作，自驱搭建通用模版与定义交付方式，综合提效 300%+",
+            },
+            {
+              title: "团队组件管理",
+              desc: "负责 Icon、双端基础组件与业务组件设计工作，自驱开发 Component Checker 帮助设计师组件管理与提效 200%+",
+            },
+          ]}
         />
         <ExperienceEntry
           date="2021 — 2022 (实习)"
           title="美图/影像设计部 - UI 设计师"
           image={{ src: "/img/about-us/aTE490vjrJaUPeQNa31D1shM188.png" }}
+          href="https://www.meituxiuxiu.com/zh-Hans"
           description={
-            <ul style={{ margin: 0, paddingLeft: 20, listStyle: "disc" }}>
-              <li>负责美图秀秀 PC 项目</li>
-              <li>独责美图秀秀上线支付宝小程序 UI 设计工作</li>
-              <li>参与美图秀秀官网视觉改版并负责官网</li>
-            </ul>
+            <div style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--color-neutral-400)" }}>
+              <p style={{ margin: 0 }}>1. 负责美图秀秀 PC 项目</p>
+              <p style={{ margin: "2px 0 0" }}>2. 负责美图秀秀上线支付宝小程序 UI 设计工作</p>
+              <p style={{ margin: "2px 0 0" }}>3. 参与美图秀秀官网视觉改版并负责官网</p>
+            </div>
           }
         />
       </div>
@@ -310,12 +357,13 @@ function ProcessSection() {
           date="2019 — 2023"
           title="福州大学 - 环境设计"
           image={{ src: "/img/about-us/LyI8o9oUU6ImUuedNTbtvIx3qgY.png" }}
+          href="https://www.fzu.edu.cn/"
           description={
-            <ul style={{ margin: 0, paddingLeft: 20, listStyle: "disc" }}>
-              <li>专业成绩排名 4/93（曾获校保研名额）</li>
-              <li>在校期间共获：校优秀毕业生、4 次校一等奖学金、2 次校二等奖学金、2次校"三好学生"荣誉称号等等</li>
-              <li>在校期间共担任过：班长、院团委宣传中心主任等职务</li>
-            </ul>
+            <div style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--color-neutral-400)" }}>
+              <p style={{ margin: 0 }}>1. 专业成绩排名 4/93（曾获校保研名额）</p>
+              <p style={{ margin: "2px 0 0" }}>2. 在校期间共获：校优秀毕业生、4 次校一等奖学金、2 次校二等奖学金、2次校"三好学生"荣誉称号等等</p>
+              <p style={{ margin: "2px 0 0" }}>3. 在校期间共担任过：班长、院团委宣传中心主任等职务</p>
+            </div>
           }
         />
       </div>
@@ -405,6 +453,7 @@ function ToolStackSection() {
             <img
               src={tool.src}
               alt={tool.alt}
+              data-no-lightbox
               style={{
                 display: "block",
                 width: 40,
@@ -537,6 +586,7 @@ function MihoyoLogo() {
     <img
       src="/img/about-us/mihoyo.png"
       alt="miHoYo"
+      data-no-lightbox
       style={{
         display: "inline-block",
         width: 50,
@@ -550,6 +600,15 @@ function MihoyoLogo() {
 
 /* ─── Page ─── */
 export default function AboutUsPage() {
+  useEffect(() => {
+    if (window.location.hash) {
+      const el = document.getElementById(window.location.hash.slice(1))
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" })
+      }
+    }
+  }, [])
+
   return (
     <>
       <style>{`
@@ -561,7 +620,8 @@ export default function AboutUsPage() {
           place-content: center flex-start;
           align-items: center;
           gap: 0;
-          width: 1200px;
+          max-width: 1200px;
+          width: 100%;
           margin: 0 auto;
           padding: 0;
           min-height: 100vh;
@@ -570,7 +630,7 @@ export default function AboutUsPage() {
         }
 
         .about-us-padding {
-          padding: 160px 40px 144px 40px;
+          padding: 120px 24px 144px 24px;
           display: flex;
           flex-flow: column;
           place-content: center flex-start;
@@ -686,13 +746,10 @@ export default function AboutUsPage() {
           flex-direction: row;
         }
 
-        /* ─── Tablet (810-1199px) ─── */
-        @media (min-width: 810px) and (max-width: 1199.98px) {
-          .about-us-page {
-            width: 810px;
-          }
+        /* ─── Tablet (769-1200px) ─── */
+        @media (min-width: 769px) and (max-width: 1200px) {
           .about-us-padding {
-            padding: 160px 32px 144px 32px;
+            padding: 120px 24px 144px 24px;
           }
           .about-us-main {
             gap: 24px;
@@ -717,16 +774,22 @@ export default function AboutUsPage() {
           }
         }
 
-        /* ─── Mobile (<810px) ─── */
-        @media (max-width: 809.98px) {
+        /* ─── Mobile (<768px) ─── */
+        @media (max-width: 768px) {
           .about-us-page {
-            width: 390px;
+            max-width: 100%;
           }
           .about-us-padding {
-            padding: 144px 24px 144px 24px;
+            padding: 120px 24px 144px 24px;
           }
           .about-us-main {
             gap: 24px;
+          }
+          .illustration-inner {
+            display: none;
+          }
+          .illustration-section {
+            display: none;
           }
 
           .about-user-layout {
@@ -745,16 +808,6 @@ export default function AboutUsPage() {
 
           .tools-grid {
             grid-template-columns: repeat(2, minmax(50px, 1fr));
-          }
-
-          .experience-entry {
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .experience-entry > p:first-child {
-            width: 100% !important;
-            max-width: 100% !important;
           }
 
           .illustration-section {
@@ -811,13 +864,24 @@ export default function AboutUsPage() {
       <div className="about-us-page">
         <div className="about-us-padding">
           <main className="about-us-main">
-            <HeaderSection />
-            <AboutUserSection />
-            <ExperiencesSection />
-            <ProcessSection />
-            <SkillsSection />
-            <ToolStackSection />
-            <IllustrationSection />
+            <PageTransition
+              style={{
+                display: "flex",
+                flexFlow: "column",
+                placeContent: "center",
+                alignItems: "center",
+                gap: 24,
+                width: "100%",
+              }}
+            >
+              <HeaderSection />
+              <AboutUserSection />
+              <ExperiencesSection />
+              <ProcessSection />
+              <SkillsSection />
+              <ToolStackSection />
+              <IllustrationSection />
+            </PageTransition>
           </main>
         </div>
       </div>

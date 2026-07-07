@@ -6,6 +6,7 @@ import { CSSProperties } from "react"
 
 interface FloatingShowcaseImageProps {
   rotation?: number
+  index?: number
   style?: CSSProperties
   mouseX: MotionValue<number>
   mouseY: MotionValue<number>
@@ -16,6 +17,7 @@ interface FloatingShowcaseImageProps {
 
 export default function FloatingShowcaseImage({
   rotation = 0,
+  index = 0,
   style,
   mouseX,
   mouseY,
@@ -35,6 +37,10 @@ export default function FloatingShowcaseImage({
 
   return (
     <motion.div
+      initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+      animate={{ opacity: 1, scale: 1, rotate: rotation }}
+      transition={{ delay: index * 0.12, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+      exit={{ opacity: 0, scale: 0.5, rotate: 0, transition: { duration: 0.3, ease: "easeIn" } }}
       whileHover={{
         scale: 1.06,
         rotate: rotation + (rotation >= 0 ? 3 : -3),
@@ -44,7 +50,6 @@ export default function FloatingShowcaseImage({
         position: "absolute",
         width: 400,
         height: 300,
-        rotate: rotation,
         x,
         y,
         borderRadius: 16,
@@ -60,6 +65,7 @@ export default function FloatingShowcaseImage({
               <img
                 src={imageSrc}
                 alt=""
+                data-no-lightbox
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -76,6 +82,7 @@ export default function FloatingShowcaseImage({
             <img
               src={imageSrc}
               alt=""
+              data-no-lightbox
               style={{
                 position: "absolute",
                 inset: 0,

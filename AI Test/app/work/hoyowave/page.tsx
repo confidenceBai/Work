@@ -8,8 +8,6 @@ import OtherProjects from "@/components/other-projects"
 import Divider from "@/components/divider"
 import { colors, styles, fonts } from "@/lib/design-tokens"
 
-const SHAPES_ICON_URL = "/img/shapes-icon.png"
-
 const labelStyle: React.CSSProperties = {
   margin: 0,
   width: "25%",
@@ -23,101 +21,10 @@ const bodyStyle: React.CSSProperties = {
 
 /* ─── 卡片组合预览 ─── */
 
-type CardPreview = {
-  label: string
-  scene: string
-  render: () => React.ReactNode
-}
-
-const CARD_PREVIEWS: CardPreview[] = [
-  {
-    label: "通知摘要",
-    scene: "AI 生成会议摘要",
-    render: () => (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ width: "70%", height: 10, borderRadius: 4, backgroundColor: colors.dark[50] }} />
-          <div style={{ width: "100%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-          <div style={{ width: "85%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-          <div style={{ width: "60%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-        </div>
-        <div style={{ width: "100%", height: 1, backgroundColor: colors.dark[50] }} />
-        <div style={{ display: "flex", gap: 6 }}>
-          <div style={{ padding: "4px 12px", borderRadius: 6, backgroundColor: colors.dark[400], border: `1px solid ${colors.dark[50]}` }}>
-            <div style={{ width: 32, height: 8, borderRadius: 3, backgroundColor: colors.neutral[500] }} />
-          </div>
-          <div style={{ padding: "4px 12px", borderRadius: 6, backgroundColor: colors.dark[50], border: `1px solid ${colors.dark[50]}` }}>
-            <div style={{ width: 24, height: 8, borderRadius: 3, backgroundColor: colors.neutral[600] }} />
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    label: "数据看板",
-    scene: "AI 返回统计数据",
-    render: () => (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, padding: 12 }}>
-        {[1, 2, 3].map((i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: 8, borderRadius: 8, backgroundColor: colors.dark[600] }}>
-            <div style={{ width: 28, height: 14, borderRadius: 4, backgroundColor: colors.dark[50] }} />
-            <div style={{ width: 20, height: 6, borderRadius: 3, backgroundColor: colors.dark[500] }} />
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    label: "图文报告",
-    scene: "AI 生成带图报告",
-    render: () => (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 8, padding: 12 }}>
-        <div style={{ width: "100%", aspectRatio: "1", borderRadius: 8, backgroundColor: colors.dark[600] }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, justifyContent: "center" }}>
-          <div style={{ width: "80%", height: 10, borderRadius: 4, backgroundColor: colors.dark[50] }} />
-          <div style={{ width: "100%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-          <div style={{ width: "90%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-          <div style={{ width: "65%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-        </div>
-      </div>
-    ),
-  },
-  {
-    label: "交互决策",
-    scene: "AI 请求用户审批",
-    render: () => (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ width: "60%", height: 10, borderRadius: 4, backgroundColor: colors.dark[50] }} />
-          <div style={{ width: "100%", height: 8, borderRadius: 4, backgroundColor: colors.dark[600] }} />
-          <div style={styleinputBox} />
-        </div>
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          <div style={{ padding: "4px 12px", borderRadius: 6, backgroundColor: colors.dark[50], border: `1px solid ${colors.dark[50]}` }}>
-            <div style={{ width: 20, height: 8, borderRadius: 3, backgroundColor: colors.neutral[600] }} />
-          </div>
-          <div style={{ padding: "4px 12px", borderRadius: 6, backgroundColor: "#5E6AD2", border: "none" }}>
-            <div style={{ width: 24, height: 8, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.8)" }} />
-          </div>
-        </div>
-      </div>
-    ),
-  },
-]
-
-const styleinputBox: React.CSSProperties = {
-  width: "100%",
-  height: 24,
-  borderRadius: 6,
-  border: `1px solid ${colors.dark[50]}`,
-  backgroundColor: colors.dark[900],
-}
-
 /* ─── Tab 配置 ─── */
 
 const HOYOWAVE_TABS: ThreeWTab[] = [
   { key: "im", label: "IM", subtitle: "即时通讯·视觉升级" },
-  /* [隐藏 VC] { key: "meeting", label: "VC", subtitle: "AI 会议纪要·布局决策" }, */
   { key: "platform", label: "Open Platform", subtitle: "模块化消息卡片" },
 ]
 
@@ -160,109 +67,6 @@ const HOYOWAVE_SECTIONS = {
       ),
     },
   ],
-  /* [隐藏 VC] meeting: [
-    {
-      title: "",
-      body: (
-        <CitationBar>
-          <p className="text-body" style={{ ...bodyStyle, margin: 0 }}>
-            {"背景："}
-            <HighlightText>{"AI 时代，会议纪要不再是奢侈品"}</HighlightText>
-            {" ——— 它帮助参与者会后快速回溯关键信息"}
-            <HighlightText>{"快速回溯关键信息"}</HighlightText>
-            {" ，辅助跟进与执行，确保每一个决策和行动项都不被遗漏。"}
-          </p>
-        </CitationBar>
-      ),
-    },
-    {
-      title: "",
-      body: (
-        <img
-          src="/img/HoYoWave/VC/封面.png"
-          alt="HoYoWave VC 封面"
-          style={{ width: "100%", borderRadius: 12, display: "block" }}
-        />
-      ),
-    },
-    {
-      title: "信息架构与布局探索",
-      titleClassName: "text-h4",
-      titleAlign: "center" as const,
-      gap: 24,
-      body: (
-        <div className="text-body">
-          {"产品希望信息密度最大化 ——— 视频、纪要、章节同时可见(三栏布局)。但屏幕空间有限，"}
-          <HighlightText>{"真的需要每个功能都要同时筛进一个页面吗？"}</HighlightText>
-          {"我的解题思路是：从竞品分析入手，用数据驱动布局决策。"}
-        </div>
-      ),
-    },
-    {
-      title: "竞品分析",
-      body: (
-        <div className="text-body">
-          {"系统梳理飞书妙记、腾讯会议、钉钉闪记、讯飞听见 4 家产品 —"}
-          <HighlightText>{"全部采用二栏布局（视频 + 纪要），无一使用三栏。"}</HighlightText>
-          {"章节等低频功能均通过 Tab 或折叠面板承载，不独立成栏。行业已经给出了答案。"}
-        </div>
-      ),
-    },
-    {
-      title: "",
-      body: (
-        <div
-          style={{
-            width: "calc(100% - 24px)",
-            aspectRatio: "16 / 9",
-            overflowY: "auto",
-            borderRadius: 12,
-            margin: 12,
-            border: `1px solid ${colors.dark[50]}`,
-          }}
-        >
-          <img
-            src="/img/HoYoWave/VC/竞品分析.png"
-            alt="竞品分析"
-            style={{ width: "100%", display: "block" }}
-          />
-        </div>
-      ),
-    },
-    {
-      title: "章节放哪里",
-      body: (
-        <div className="text-body">
-          {"两种方案：A）章节放在视频下方（横向，空间有限，条目被截断）；B）章节放在右侧面板，通过 Tab 切换（纵向，完整列表）。选择"}
-          <HighlightText>{"方案 B"}</HighlightText>
-          {" — 章节是低频功能，不应占用视频区空间；竖向布局契合时间线阅读习惯，能展示更多条目。"}
-        </div>
-      ),
-    },
-    {
-      title: "多端适配策略",
-      titleClassName: "text-h4",
-      titleAlign: "center" as const,
-      gap: 24,
-      body: (
-        <div className="text-body">
-          {"桌面端左右分栏，窄屏自动切换为上下堆叠。"}
-          <HighlightText>{"一套布局逻辑覆盖 Web 和移动端"}</HighlightText>
-          {"，既解决自适应问题，也让前端同学在移动端适配上更方便。"}
-        </div>
-      ),
-    },
-    {
-      title: "补充: AI 容错与无障碍",
-      body: (
-        <div className="text-body">
-          {"AI 生成内容并非总是准确 — 设计了"}
-          <HighlightText>{"置信度标识 + 人工修正入口"}</HighlightText>
-          {"，让用户可以校正 AI 输出。同时遵循 WCAG 2.1 AA 标准，确保色觉障碍用户也能正常使用。"}
-        </div>
-      ),
-    },
-  ], */
   platform: [
     {
       title: "",
@@ -340,8 +144,12 @@ const HOYOWAVE_SECTIONS = {
         <div className="text-body">
           {"无论卡片由哪些模块拼装，最终渲染结果必须在同一套视觉规则下 —"}
           <HighlightText>{" 这是设计系统的核心价值。"}</HighlightText>
+          {"（图例为我为团队制作的“项目管理机器人”）"}
         </div>
       ),
+      imageSrc: "/img/HoYoWave/OP/视觉一致性.png",
+      imageAfterBody: true,
+      noMaxHeight: true,
     },
   ],
 }
@@ -371,35 +179,6 @@ export default function WorkHoYoWavePage() {
     >
       {/* Decorative shapes icon */}
       <div
-        style={{
-          position: "absolute",
-          width: 484,
-          height: 491,
-          top: -137,
-          right: -137,
-          overflow: "clip",
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={SHAPES_ICON_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            height: 533,
-            aspectRatio: "1",
-            right: -29,
-            bottom: -28,
-            left: -20,
-            transform: "rotate(20deg)",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
-      <div
         className="case-study-wrapper"
         style={{
           maxWidth: 1200,
@@ -419,7 +198,7 @@ export default function WorkHoYoWavePage() {
             flexDirection: "column",
             alignItems: "center",
             gap: 56,
-            padding: "176px 40px",
+            padding: "120px 40px",
           }}
         >
           {/* ═══ Card 1: Header ═══ */}
@@ -438,7 +217,6 @@ export default function WorkHoYoWavePage() {
             </h1>
             <Divider />
             <p className="text-body" style={{ margin: 0 }}>
-              {/* [隐藏 VC] "HoYoWave 是米哈游自研的一站式协同办公平台，以即时通讯（IM）为核心，旨在整合即时通讯、内容创作、知识沉淀、日程管理、音视频会议、开放平台等协作功能。其中，主要负责即时通讯、音视频会议、开放平台部分的迭代需求，两年来共计处理大小需求 40+。" */}
               {"HoYoWave 是米哈游自研的一站式协同办公平台，以即时通讯（IM）为核心，旨在整合即时通讯、内容创作、知识沉淀、日程管理、开放平台等协作功能。其中，主要负责即时通讯、开放平台部分的迭代需求，两年来共计处理大小需求 40+。"}
             </p>
             <Divider />
@@ -450,7 +228,6 @@ export default function WorkHoYoWavePage() {
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"工作内容"}</p>
                 <p className="text-body" style={bodyStyle}>
-                  {/* [隐藏 VC] "UI/UX 设计师 | 负责 IM、音视频会议、开放平台三个模块的迭代设计，两年 40+ 需求" */}
                   {"UI/UX 设计师 | 负责 IM、开放平台两个模块的迭代设计，两年 40+ 需求"}
                 </p>
               </div>
@@ -466,7 +243,7 @@ export default function WorkHoYoWavePage() {
             className="case-study-card"
             style={{
               ...styles.card,
-              maxWidth: 1000,
+              maxWidth: 820,
               padding: 24,
               display: "flex",
               flexDirection: "column",
@@ -512,6 +289,7 @@ export default function WorkHoYoWavePage() {
                     <img
                       src="/img/HoYoWave/升级后.png"
                       alt="IM 视觉升级后"
+                      data-no-lightbox
                       style={{ display: "block", width: "100%", height: "auto", objectFit: "contain" }}
                     />
                     {/* 顶层：升级前（带 clip-path 遮罩） */}
@@ -519,6 +297,7 @@ export default function WorkHoYoWavePage() {
                     <img
                       src="/img/HoYoWave/升级前.png"
                       alt="IM 视觉升级前"
+                      data-no-lightbox
                       style={{
                         position: "absolute",
                         inset: 0,
@@ -598,100 +377,9 @@ export default function WorkHoYoWavePage() {
                 </>
               )}
 
-              {/* [隐藏 VC Tab] ── VC Tab: 竞品对比 + 方案对比 + 最终方案 ──
-              {activeTab === "meeting" && (
-                <>
-                  <img src="/img/HoYoWave/VC/竞品对比.png" alt="四款竞品布局对比" style={{ width: "calc(100% - 24px)", height: "auto", borderRadius: 12, margin: 12 }} />
-
-                  <div style={styles.featureRow}>
-                    <p className="text-body-medium" style={styles.featureTitle}>{"方案对比"}</p>
-                    <p className="text-body" style={styles.featureDesc}>{"三栏布局挤压视频宽度（已否决），二栏布局让核心内容获得充足空间（已采纳）。"}</p>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden", border: "2px solid #A25956", borderTop: "2px solid #A25956", borderLeft: "2px solid #A25956" }}>
-                      <img src="/img/HoYoWave/VC/三栏方案.png" alt="三栏布局方案" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden" }}>
-                      <img src="/img/HoYoWave/VC/二栏方案.png" alt="二栏布局方案" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                  </div>
-
-                  <div style={styles.featureRow}>
-                    <p className="text-body-medium" style={styles.featureTitle}>{"章节位置"}</p>
-                    <p className="text-body" style={styles.featureDesc}>{"方案 A 放视频下方（已否决），方案 B 放右侧面板 Tab（已采纳）— 竖向布局更契合时间线阅读。"}</p>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden", border: "2px solid #A25956", borderTop: "2px solid #A25956", borderLeft: "2px solid #A25956" }}>
-                      <img src="/img/HoYoWave/VC/章节方案A.png" alt="方案A：章节在视频下方" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden" }}>
-                      <img src="/img/HoYoWave/VC/章节方案B.png" alt="方案B：章节在右侧面板" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden" }}>
-                      <img src="/img/HoYoWave/VC/桌面端.png" alt="桌面端左右分栏" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                    <div style={{ ...styles.subCard, padding: 16, overflow: "hidden" }}>
-                      <img src="/img/HoYoWave/VC/移动端.png" alt="窄屏上下堆叠" style={{ width: "100%", height: "auto", borderRadius: 4, display: "block" }} />
-                    </div>
-                  </div>
-
-                  <img src="/img/HoYoWave/VC/最终方案.png" alt="VC 最终方案 — 布局决策标注" style={{ width: "calc(100% - 24px)", height: "auto", borderRadius: 12, margin: 12 }} />
-
-                  <div style={styles.featureRow}>
-                    <p className="text-body-medium" style={styles.featureTitle}>{"反思"}</p>
-                    <p className="text-body" style={styles.featureDesc}>
-                      {"布局设计的本质是信息优先级排序。视频是第一优先级，所以它获得最大面积；章节是低频功能，所以它退入 Tab。"}
-                      <HighlightText>{"每一个「放哪里」的决策，背后都是对用户注意力的尊重。"}</HighlightText>
-                    </p>
-                  </div>
-                </>
-              )}
-              */}
-
               {/* ── 开放平台 Tab: 卡片预览 + 搭建器截图 ── */}
               {activeTab === "platform" && (
                 <>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(2, 1fr)",
-                      gap: 16,
-                      marginTop: 8,
-                    }}
-                  >
-                    {CARD_PREVIEWS.map((preview) => (
-                      <div
-                        key={preview.label}
-                        style={{
-                          ...styles.subCard,
-                          display: "flex",
-                          flexDirection: "column",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {preview.render()}
-                        <div style={{ width: "100%", height: 1, backgroundColor: colors.dark[50] }} />
-                        <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-                          <p
-                            className="text-body-medium"
-                            style={{ margin: 0, fontSize: 14, color: colors.neutral[50] }}
-                          >
-                            {preview.label}
-                          </p>
-                          <p
-                            className="text-body"
-                            style={{ margin: 0, fontSize: 12, color: colors.neutral[500] }}
-                          >
-                            {preview.scene}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
                 </>
               )}
             </ThreeWPanel>

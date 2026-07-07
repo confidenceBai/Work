@@ -10,8 +10,6 @@ import { colors, text, styles } from "@/lib/design-tokens"
 import { useCursorGlow } from "@/lib/use-cursor-glow"
 import FlowingBorder from "@/components/flowing-border"
 
-const SHAPES_ICON_URL = "/img/shapes-icon.png"
-
 const SIGNAGE_BLUE = "#006EFA"
 const SIGNAGE_RED = "#F73650"
 
@@ -250,35 +248,6 @@ export default function WorkWaveRoomsPage() {
     >
       {/* Decorative shapes icon */}
       <div
-        style={{
-          position: "absolute",
-          width: 484,
-          height: 491,
-          top: -137,
-          right: -137,
-          overflow: "clip",
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={SHAPES_ICON_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            height: 533,
-            aspectRatio: "1",
-            right: -29,
-            bottom: -28,
-            left: -20,
-            transform: "rotate(20deg)",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
-      <div
         className="case-study-wrapper"
         style={{
           maxWidth: 1200,
@@ -298,7 +267,7 @@ export default function WorkWaveRoomsPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: 56,
-            padding: "176px 40px",
+            padding: "120px 40px",
           }}
         >
           {/* ═══ Card 1: Header ═══ */}
@@ -334,7 +303,7 @@ export default function WorkWaveRoomsPage() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"项目年份"}</p>
-                <p className="text-body" style={bodyStyle}>{"2025"}</p>
+                <p className="text-body" style={bodyStyle}>{"2024"}</p>
               </div>
             </div>
           </article>
@@ -344,7 +313,7 @@ export default function WorkWaveRoomsPage() {
             className="case-study-card"
             style={{
               ...styles.card,
-              maxWidth: 1000,
+              maxWidth: 820,
               padding: 24,
               display: "flex",
               flexDirection: "column",

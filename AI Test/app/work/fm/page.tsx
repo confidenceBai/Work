@@ -5,10 +5,9 @@ import ThreeWPanel, { type ThreeWSection, type ThreeWTab } from "@/components/th
 import WhatStepSection, { type WhatStep } from "@/components/what-step-section"
 import HighlightText from "@/components/highlight-text"
 import OtherProjects from "@/components/other-projects"
+import CitationBar from "@/components/citation-bar"
 import Divider from "@/components/divider"
 import { styles } from "@/lib/design-tokens"
-
-const SHAPES_ICON_URL = "/img/shapes-icon.png"
 
 const PRODUCT_IMAGE_1 = "/img/fm/封面.png"
 const PRODUCT_IMAGE_1B = "/img/product-1b.png"
@@ -16,10 +15,9 @@ const BRAINSTORM_STRIP = "/img/brainstorm-strip.png"
 const THINKING_FRAME_IMAGE = "/img/thinking-frame.png"
 const WHO_IMAGE = "/img/who-image.png"
 
+const FINAL_CANVAS_IMAGE = "/img/fm/最终方案（画布）.png"
+const FINAL_AI_IMAGE = "/img/fm/最终方案（AI）.png"
 const FINAL_SOLUTION_IMAGE = "/img/final-solution.png"
-const PRODUCT_IMAGE_AI = "/img/product-ai.png"
-const PRODUCT_IMAGE_DATA = "/img/product-data.png"
-const PRODUCT_IMAGE_PROFILE = "/img/product-profile.png"
 const WHAT_LARGE_IMAGE = "/img/what-large.png"
 
 const labelStyle: React.CSSProperties = {
@@ -31,6 +29,7 @@ const labelStyle: React.CSSProperties = {
 const bodyStyle: React.CSSProperties = {
   margin: 0,
   width: "100%",
+  flex: 1,
 }
 
 const THREE_W_TABS: ThreeWTab[] = [
@@ -83,11 +82,21 @@ const THREE_W_SECTIONS_BY_TAB: Record<string, ThreeWSection[]> = {
   ],
   who: [
     {
-      title: "",
-      body: "",
+      title: "多层角色，关注点各不相同：",
+      body:
+        <div className="text-body">
+          <HighlightText>{"BP（项目管理员）"}</HighlightText>
+          {"作为上游角色，负责搭建 FT 架构树、配置盘点周期，是\"空间的创建者\"；"}
+          <HighlightText>{"一线 Leader"}</HighlightText>
+          {"是核心用户，在 FT 卡片内完成盘人（阵型表排布）和盘事（事项卡片管理）；"}
+          <HighlightText>{"高层 Leader / 项管"}</HighlightText>
+          {"是信息消费方，关注跨 FT 的数据聚合和资源合理性。"}
+        </div>,
       imageSrc: WHO_IMAGE,
       imageAlt: "Who",
       imageWidth: 1108,
+      imageAfterBody: true,
+      gap: 16,
     },
   ],
 }
@@ -125,35 +134,6 @@ export default function WorkFmPage() {
       }}
     >
       <div
-        style={{
-          position: "absolute",
-          width: 484,
-          height: 491,
-          top: -137,
-          right: -137,
-          overflow: "clip",
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={SHAPES_ICON_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            height: 533,
-            aspectRatio: "1",
-            right: -29,
-            bottom: -28,
-            left: -20,
-            transform: "rotate(20deg)",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
-      <div
         className="case-study-wrapper"
         style={{
           maxWidth: 1200,
@@ -173,7 +153,7 @@ export default function WorkFmPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: 56,
-            padding: "176px 40px",
+            padding: "120px 40px",
           }}
         >
           <article
@@ -187,27 +167,30 @@ export default function WorkFmPage() {
             }}
           >
             <h1 className="text-h3" style={{ margin: 0 }}>
-              {"人事一体化白板"}
+              {"人事系统"}
             </h1>
             <Divider />
-            <p className="text-body" style={{ margin: 0 }}>
-              {"人事一体化白板（以下简称\"FT 白板\"）是米哈游内部针对人事盘点系统进行的一项核心重构方案，旨在解决\"盘人\"（团队盘点）和\"盘事\"（任务盘点）长期数据割裂的问题。白板核心是以 FT（Feature Team，特性团队，服务游戏生产管线运作的组织管理方式） 为业务核心，各级 Leader/组长围绕其进行人员与工作事项的盘点，最终将原本分离的\"人\"与\"事\"绑定，以此提升大型项目的协同效率。"}
-            </p>
+            <div className="text-body" style={{ margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+              <span>{"人事系统原包含：盘人&盘事双白板、绩效系统、薪酬系统、员工档案等。"}</span>
+              <span>{"本项目将重点介绍盘人&盘事双白板一体化项目（以下简称\"FT 白板\"）是米哈游内部针对人事盘点系统进行的一项核心重构方案，旨在解决\"盘人\"&\"盘事\"双白板长期数据割裂的问题。"}</span>
+              <span>{"白板核心是以 FT（Feature Team，特性团队，服务游戏生产管线运作的组织管理方式） 为业务核心，各级 Leader/组长围绕其进行人员与工作事项的盘点，最终将原本分离的\"人\"与\"事\"绑定，以此提升大型项目的协同效率。"}</span>
+              <span>{"核心功能链路：项目装配台 → 配置业务周期 & FT 架构树 → 用户前台 → FT 卡片 → 阵型表 / 事项卡片 → 标签与关键角色，以此产生基础业务数据并在人事下游功能被消费。"}</span>
+            </div>
             <Divider />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"关键词"}</p>
+                <p className="text-body-medium" style={labelStyle}>{"关键词"}</p>
                 <p className="text-body" style={bodyStyle}>{"人事管理 / 企业协同 / AI"}</p>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"工作内容"}</p>
+                <p className="text-body-medium" style={labelStyle}>{"工作内容"}</p>
                 <p className="text-body" style={bodyStyle}>
-                  {"产品设计师 | 分析、定义流程和功能框架，推动从\"产品经理一句话概念\"到具体方案的落地"}
+                  {"产品设计师 | 在需求定义模糊的背景下，独立完成业务梳理、概念体系搭建与交互方案设计"}
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"项目年份"}</p>
-                <p className="text-body" style={bodyStyle}>{"2026"}</p>
+                <p className="text-body-medium" style={labelStyle}>{"项目年份"}</p>
+                <p className="text-body" style={bodyStyle}>{"2025 - 2026"}</p>
               </div>
             </div>
           </article>
@@ -216,7 +199,7 @@ export default function WorkFmPage() {
             className="case-study-card"
             style={{
               ...styles.card,
-              maxWidth: 1000,
+              maxWidth: 820,
               padding: 24,
               display: "flex",
               flexDirection: "column",
@@ -236,17 +219,16 @@ export default function WorkFmPage() {
             />
             <Divider />
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <p className="text-body-medium" style={labelStyle}>{"😓 挑战"}</p>
-              <p className="text-body" style={bodyStyle}>
-                {"该项目初期可以说是完全空白，"}
-                <HighlightText>只有</HighlightText>
-                {" \"白板一体化\" 这一"}
-                <HighlightText>抽象的命题</HighlightText>
-                {"。 上至为什么做、要达到什么成果；下至各种业务概念、角色、逻辑、流程都没有个明确的解答 & 文档沉淀，"}
-                <HighlightText>一切都需要自己逐一摸索</HighlightText>
-                {"。业务对设计的输入也是一些脱敏过后的案例。"}
-                <HighlightText>对工作的开展造成了十分大的阻碇</HighlightText>
-              </p>
+              <p className="text-body-medium" style={labelStyle}>{"挑战"}</p>
+              <div className="text-body" style={{ ...bodyStyle, display: "flex", flexDirection: "column", gap: 12 }}>
+                <p style={{ margin: 0 }}>
+                  {"该项目初期没有统一的业务术语体系。FT、空间、周期、根节点、阵型表、事项卡片等概念在团队内有多种口头叫法，缺乏明确定义。"}
+                  <HighlightText>{"设计的第一步不是画界面，而是与项目 BP、一线 LD 求教，建立一套所有角色都能对齐的概念体系。"}</HighlightText>
+                </p>
+                <p style={{ margin: 0 }}>
+                  {"白板 + FT 卡片 + 阵型表 + 事项卡片的组合形态没有现成的竞品可以参考，许多功能和交互细节需要通过快速原型验证来摸索。好在 AI 时代 Claude Code 能够帮助我们快速搭建可交互原型，大幅降低了试错成本。"}
+                </p>
+              </div>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -262,9 +244,9 @@ export default function WorkFmPage() {
             />
             <Divider />
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <p className="text-body-medium" style={labelStyle}>{"🙋 我的解题思路"}</p>
-              <p className="text-body" style={{ ...bodyStyle, textAlign: "right" }}>
-                {"把问题掌开揉碎！逐个击破 🤷 🤷 🤷"}
+              <p className="text-body-medium" style={styles.featureTitle}>{"我的解题思路"}</p>
+              <p className="text-body" style={bodyStyle}>
+                {"拆解业务概念，梳理角色动线，逐步建立设计框架"}
               </p>
             </div>
 
@@ -319,34 +301,16 @@ export default function WorkFmPage() {
               </svg>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <p className="text-body-medium" style={{ margin: 0, width: "fit-content" }}>
-                {"🧠 中间省略一万步的脑爆"}
+            {/* 最终方案 (信息生产) */}
+            <div style={{ ...styles.featureRow, justifyContent: "center", flexDirection: "column", gap: 16 }}>
+              <p className="text-h4" style={{ margin: 0, width: "fit-content", alignSelf: "center" }}>
+                {"最终方案 — 信息生产"}
               </p>
-              <p className="text-body" style={bodyStyle}>
-                {"虽然已经明确了核心的概念 & 产品动线。但"}
-                <HighlightText>面对一个基本没有竞品参考的全新产品</HighlightText>
-                {"，许多的功能 & 细节都是摸着石头过河，好在 "}
-                <HighlightText>AI Studio、Cursor</HighlightText>
-                {" 等产品能"}
-                <HighlightText>帮我们快速搭建原型并验证想法，将我们试错的成本大大降</HighlightText>
-                {"低。"}
-              </p>
-            </div>
-
-            <Divider />
-
-            {/* 🏁 最终方案 (信息生产) */}
-            <div style={{ ...styles.featureRow, justifyContent: "center" }}>
-              <p className="text-h4" style={{ margin: 0, width: "fit-content" }}>
-                {"🏁 最终方案 (信息生产) 🏁"}
-              </p>
+              <CitationBar>
+                <p className="text-body" style={{ margin: 0, maxWidth: 720 }}>
+                  {"信息生产遵循\"一次配置，全链路同步\"的设计原则：上游（BP 侧）在组装站以 xmind 树形结构搭建 FT 架构并配置盘点周期，变更实时同步到前端白板；下游（Leader 侧）在统一白板上，每个 FT 节点自动呈现为 FT 卡片，通过阵型表完成盘人、通过事项卡片完成盘事；白板中填写的数据自动穿透至员工档案，为后续人事动作提供依据。"}
+                </p>
+              </CitationBar>
             </div>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -362,78 +326,42 @@ export default function WorkFmPage() {
 
             <Divider />
 
-            {/* 🏁 最终方案 (信息消费) */}
-            <div style={{ ...styles.featureRow, justifyContent: "center" }}>
-              <p className="text-h4" style={{ margin: 0, width: "fit-content" }}>
-                {"🏁 最终方案 (信息消费) 🏁"}
+            {/* 最终方案 (信息消费) */}
+            <div style={{ ...styles.featureRow, justifyContent: "center", flexDirection: "column", gap: 16 }}>
+              <p className="text-h4" style={{ margin: 0, width: "fit-content", alignSelf: "center" }}>
+                {"最终方案 - 关键页面"}
               </p>
-            </div>
-
-            {/* 🌟 AI 问答 */}
-            <div style={styles.featureRow}>
-              <p style={styles.featureTitle}>{"🌟 AI 问答"}</p>
-              <p className="text-body" style={styles.featureDesc}>
-                {"在白板一体化"}
-                <HighlightText>内置 "Fomi AI" Agent</HighlightText>
-                {"，用户可以通过对话的方式快速了解、分析项目运行情况 & 运行成本。甚至可以"}
-                <HighlightText>帮助用户进行快捷操作</HighlightText>
-              </p>
+              <CitationBar>
+                <p className="text-body" style={{ margin: 0, maxWidth: 720 }}>
+                  {"信息消费遵循一个核心原则：不同层级的用户需要不同粒度的信息聚合。项目管理员（BP）使用装配台配置项目结构、周期、职能定义、各类标签；一线 Leader 在用户前台画布上直接操作，盘人盘事，所见即所得；高层 Leader 和项管需要跨 FT 的数据密度，因此提供表格和甘特图视图。"}
+                </p>
+              </CitationBar>
             </div>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={PRODUCT_IMAGE_AI}
-              alt="AI 问答"
+              src={FINAL_CANVAS_IMAGE}
+              alt="最终方案 - 画布"
               style={{
                 width: "100%",
                 height: "auto",
-                borderRadius: 12,
                 display: "block",
               }}
             />
 
-            {/* 📊 数据的多样化展示 */}
-            <div style={styles.featureRow}>
-              <p style={styles.featureTitle}>{"📊 数据的多样化展示"}</p>
-              <p className="text-body" style={styles.featureDesc}>
-                {"对于更高层级的 Leader/项管来说，"}
-                <HighlightText>信息的密度往往更重要</HighlightText>
-                {"。此时白板的载体呈现信息就不占优了。就需要使用表格 & 甘特的形式为用户展示信息"}
+            <CitationBar>
+              <p className="text-body" style={{ margin: 0, maxWidth: 720 }}>
+                {"除了画布的基础能力外，项目还支持了 AI 问答能力，用户用户通过自然语言提问，可以快速了解、创建、甚至是编辑画布已有内容。"}
               </p>
-            </div>
+            </CitationBar>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={PRODUCT_IMAGE_DATA}
-              alt="数据的多样化展示"
+              src={FINAL_AI_IMAGE}
+              alt="最终方案 - AI"
               style={{
                 width: "100%",
                 height: "auto",
-                borderRadius: 12,
-                display: "block",
-              }}
-            />
-
-            {/* 🕶️ 员工档案数据穿透 */}
-            <div style={styles.featureRow}>
-              <p style={styles.featureTitle}>{"🕶️ 员工档案数据穿透"}</p>
-              <p className="text-body" style={styles.featureDesc}>
-                {"员工在白板中被填写的事项 & FT 将会"}
-                <HighlightText>自动穿透至人员档案</HighlightText>
-                {"中。为后续此人的"}
-                <HighlightText>人事动作提供依据</HighlightText>
-                {"。"}
-              </p>
-            </div>
-
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={PRODUCT_IMAGE_PROFILE}
-              alt="员工档案数据穿透"
-              style={{
-                width: "100%",
-                height: "auto",
-                borderRadius: 12,
                 display: "block",
               }}
             />

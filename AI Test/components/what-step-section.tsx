@@ -1,7 +1,6 @@
 "use client"
 
 import { type ReactNode } from "react"
-import { colors } from "@/lib/design-tokens"
 
 export interface WhatStep {
   title: string

@@ -185,13 +185,13 @@ export default function ThreeWPanel({
                 </div>
               )}
 
-              {section.imageSrc && section.imageAfterBody && (
+              {section.imageSrc && (
                 <div
                   style={{
                     maxHeight: section.noMaxHeight ? undefined : 520,
                     borderRadius: 12,
                     overflow: "auto",
-                    margin: 12,
+                    margin: section.imageAfterBody ? 12 : undefined,
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -199,7 +199,7 @@ export default function ThreeWPanel({
                     src={section.imageSrc}
                     alt={section.imageAlt ?? section.title}
                     style={{
-                      width: "100%",
+                      width: section.imageWidth ?? "100%",
                       height: "auto",
                       borderRadius: 12,
                       display: "block",
@@ -209,40 +209,6 @@ export default function ThreeWPanel({
               )}
             </Fragment>
           ))}
-
-          {sections.some((s) => s.imageSrc && !s.imageAfterBody) && (
-            <>
-              {sections
-                .filter((s) => s.imageSrc && !s.imageAfterBody)
-                .map((section, index) => (
-                  <div
-                    key={`img-${index}`}
-                    style={{
-                      width: "100%",
-                      height: 520,
-                      borderRadius: 12,
-                      border: "1px solid rgba(99, 99, 121, 0.6)",
-                      overflowX: "auto",
-                      overflowY: "auto",
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={section.imageSrc}
-                      alt={section.imageAlt ?? section.title}
-                      style={{
-                        width: section.imageWidth ?? "100%",
-                        maxWidth: "none",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: 0,
-                        display: "block",
-                      }}
-                    />
-                  </div>
-                ))}
-            </>
-          )}
 
           {children}
         </motion.div>

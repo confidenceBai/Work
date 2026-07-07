@@ -9,8 +9,6 @@ import OtherProjects from "@/components/other-projects"
 import Divider from "@/components/divider"
 import { colors, fonts, text, syntax, styles } from "@/lib/design-tokens"
 
-const SHAPES_ICON_URL = "/img/shapes-icon.png"
-
 const labelStyle: React.CSSProperties = {
   margin: 0,
   width: "25%",
@@ -187,35 +185,6 @@ export default function WorkLotteryPage() {
       }}
     >
       <div
-        style={{
-          position: "absolute",
-          width: 484,
-          height: 491,
-          top: -137,
-          right: -137,
-          overflow: "clip",
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={SHAPES_ICON_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            height: 533,
-            aspectRatio: "1",
-            right: -29,
-            bottom: -28,
-            left: -20,
-            transform: "rotate(20deg)",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
-      <div
         className="case-study-wrapper"
         style={{
           maxWidth: 1200,
@@ -235,7 +204,7 @@ export default function WorkLotteryPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: 56,
-            padding: "176px 40px",
+            padding: "120px 40px",
           }}
         >
           {/* ═══ Card 1: Header ═══ */}
@@ -270,7 +239,7 @@ export default function WorkLotteryPage() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"项目年份"}</p>
-                <p className="text-body" style={bodyStyle}>{"2026"}</p>
+                <p className="text-body" style={bodyStyle}>{"2024 - 2025"}</p>
               </div>
             </div>
           </article>
@@ -280,7 +249,7 @@ export default function WorkLotteryPage() {
             className="case-study-card"
             style={{
               ...styles.card,
-              maxWidth: 1000,
+              maxWidth: 820,
               padding: 24,
               display: "flex",
               flexDirection: "column",

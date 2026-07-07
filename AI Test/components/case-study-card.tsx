@@ -13,14 +13,12 @@ interface CaseStudyCardProps {
   href: string
   imageSrc?: string
   title?: string
-  height?: number
 }
 
 export default function CaseStudyCard({
   href,
   imageSrc,
   title,
-  height = 500,
 }: CaseStudyCardProps) {
   const { ref, glowVisible } = useCursorGlow()
 
@@ -28,12 +26,13 @@ export default function CaseStudyCard({
     <MotionLink
       ref={ref}
       href={href}
+      className="case-study-card-item"
       style={{
         boxSizing: "border-box",
         position: "relative",
         display: "block",
         width: "100%",
-        height,
+        aspectRatio: "666 / 500",
         borderRadius: 24,
         backgroundColor: colors.dark[700],
         borderTop: `1px solid ${colors.dark[400]}`,
@@ -78,6 +77,7 @@ export default function CaseStudyCard({
             <img
               src={imageSrc}
               alt={title ?? ""}
+              data-no-lightbox
               style={{
                 display: "block",
                 width: "100%",

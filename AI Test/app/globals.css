@@ -61,6 +61,10 @@ body {
   padding: 0;
 }
 
+img:not([data-no-lightbox]) {
+  cursor: zoom-in !important;
+}
+
 @keyframes grain {
   0%   { transform: translate(0%, 0%); }
   10%  { transform: translate(-5%, -10%); }
@@ -87,6 +91,71 @@ body {
   animation: grain 8s steps(10, start) infinite;
 }
 
+/* AI chat window top glow */
+@keyframes ai-glow-drift-1 {
+  0%   { transform: translate(-20%, -10%) scale(1);   opacity: 0.5; }
+  50%  { transform: translate(10%, 5%) scale(1.15);   opacity: 0.8; }
+  100% { transform: translate(-20%, -10%) scale(1);   opacity: 0.5; }
+}
+
+@keyframes ai-glow-drift-2 {
+  0%   { transform: translate(20%, 5%) scale(1.1);    opacity: 0.6; }
+  50%  { transform: translate(-15%, -5%) scale(0.95); opacity: 0.4; }
+  100% { transform: translate(20%, 5%) scale(1.1);    opacity: 0.6; }
+}
+
+@keyframes ai-glow-drift-3 {
+  0%   { transform: translate(5%, -15%) scale(0.9);   opacity: 0.4; }
+  50%  { transform: translate(-10%, 10%) scale(1.1);  opacity: 0.65; }
+  100% { transform: translate(5%, -15%) scale(0.9);   opacity: 0.4; }
+}
+
+.ai-glow-overlay {
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  right: -80px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ai-glow-blob {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.ai-glow-blob--1 {
+  top: 0;
+  left: 5%;
+  background: radial-gradient(circle, rgba(120, 100, 255, 0.35) 0%, transparent 70%);
+  animation: ai-glow-drift-1 9s ease-in-out infinite;
+}
+
+.ai-glow-blob--2 {
+  top: 20px;
+  right: 10%;
+  background: radial-gradient(circle, rgba(94, 106, 210, 0.3) 0%, transparent 70%);
+  animation: ai-glow-drift-2 11s ease-in-out infinite;
+}
+
+.ai-glow-blob--3 {
+  top: 40px;
+  left: 40%;
+  background: radial-gradient(circle, rgba(160, 120, 255, 0.28) 0%, transparent 70%);
+  animation: ai-glow-drift-3 13s ease-in-out infinite;
+}
+
+.ai-glow-blob--4 {
+  top: -10px;
+  left: 55%;
+  background: radial-gradient(circle, rgba(255, 100, 100, 0.25) 0%, transparent 70%);
+  animation: ai-glow-drift-2 10s ease-in-out infinite;
+}
+
 /* Responsive utilities */
 .content-column {
   width: 100%;
@@ -102,38 +171,39 @@ body {
     padding-right: 16px;
   }
 
-  .floating-images-container {
-    display: none;
-  }
-
   .other-projects-grid {
     grid-template-columns: 1fr !important;
   }
 
-  .comparison-grid {
-    grid-template-columns: 1fr !important;
+  .case-study-wrapper {
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 80px !important;
   }
 
-  .case-study-wrapper {
-    padding-left: 16px;
-    padding-right: 16px;
-    gap: 80px !important;
+  .case-study-wrapper > section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
 
   .case-study-card {
     max-width: 100% !important;
   }
 
-  .contact-card {
-    flex-direction: column !important;
-    padding: 24px !important;
+  .hero-card {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+
+  .hero-card h1 {
+    font-size: 22px;
   }
 }
 
 /* Contact page responsive - Tablet (810-1199px) */
 @media (max-width: 1199.98px) and (min-width: 810px) {
   .contact-page > div {
-    padding: 176px 32px 144px !important;
+    padding: 120px 32px 144px !important;
   }
 
   .contact-page-inner {
@@ -145,19 +215,23 @@ body {
     padding: 16px !important;
   }
 
+  .contact-page-inner .contact-header {
+    padding: 24px !important;
+  }
+
   .contact-page-inner h1 {
     font-size: 32px !important;
   }
 
-  .chat-icon-decoration {
-    display: none !important;
+  .contact-page-inner .contact-header h1 {
+    font-size: 40px !important;
   }
 }
 
 /* Contact page responsive - Mobile (<810px) */
 @media (max-width: 809.98px) {
   .contact-page > div {
-    padding: 144px 24px 144px !important;
+    padding: 120px 24px 120px !important;
   }
 
   .contact-page-inner {
@@ -169,8 +243,16 @@ body {
     padding: 16px !important;
   }
 
+  .contact-page-inner .contact-header {
+    padding: 24px !important;
+  }
+
   .contact-page-inner h1 {
     font-size: 32px !important;
+  }
+
+  .contact-page-inner .contact-header h1 {
+    font-size: 40px !important;
   }
 
   .contact-form-row {
@@ -183,32 +265,13 @@ body {
     max-width: 157px !important;
   }
 
-  .chat-icon-decoration {
-    display: none !important;
+  .contact-form-row > div:last-child {
+    align-self: stretch !important;
+    flex: none !important;
   }
 }
 
 @layer components {
-  .text-h1 {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-h1);
-    line-height: var(--line-height-heading);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: center;
-  }
-
-  .text-h2 {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-h2);
-    line-height: var(--line-height-heading);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: left;
-  }
-
   .text-h3 {
     font-family: var(--font-sans);
     font-size: var(--font-size-h3);
@@ -229,26 +292,6 @@ body {
     text-align: left;
   }
 
-  .text-h5 {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-h5);
-    line-height: var(--line-height-subheading);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: left;
-  }
-
-  .text-h6 {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-h6);
-    line-height: var(--line-height-subheading);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: left;
-  }
-
   .text-body {
     font-family: var(--font-sans);
     font-size: var(--font-size-body);
@@ -262,26 +305,6 @@ body {
   .text-body-medium {
     font-family: var(--font-sans);
     font-size: var(--font-size-body);
-    line-height: var(--line-height-ui);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: left;
-  }
-
-  .text-body-semibold {
-    font-family: var(--font-sans);
-    font-size: var(--font-size-body);
-    line-height: var(--line-height-ui);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--letter-spacing-normal);
-    color: var(--color-neutral-50);
-    text-align: left;
-  }
-
-  .text-body-small {
-    font-family: var(--font-display);
-    font-size: var(--font-size-small);
     line-height: var(--line-height-ui);
     font-weight: var(--font-weight-medium);
     letter-spacing: var(--letter-spacing-normal);

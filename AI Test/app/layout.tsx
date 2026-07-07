@@ -3,6 +3,9 @@ import "./globals.css";
 import BackgroundLayer from "@/components/background-layer";
 import Navigation from "@/components/navigation";
 import InteractiveGlow from "@/components/interactive-glow";
+import { ChatProvider } from "@/lib/chat-context";
+import ChatWindow from "@/components/chat-window";
+import ImageLightbox from "@/components/image-lightbox";
 
 export const metadata: Metadata = {
   title: "白子煜 · UX Designer",
@@ -18,9 +21,13 @@ export default function RootLayout({
     <html lang="zh-CN" className="h-full">
       <body className="min-h-full relative">
         <BackgroundLayer />
-        <Navigation />
-        {children}
-        <InteractiveGlow />
+        <ChatProvider>
+          <Navigation />
+          {children}
+          <InteractiveGlow />
+          <ChatWindow />
+        </ChatProvider>
+        <ImageLightbox />
       </body>
     </html>
   );

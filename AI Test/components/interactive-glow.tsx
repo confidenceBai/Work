@@ -13,7 +13,7 @@ export default function InteractiveGlow() {
   const { glowTarget, mouseX, mouseY, bounds, borderRadius } = useInteractiveGlow()
 
   const clipPath = bounds
-    ? `inset(${bounds.top}px ${window.innerWidth - bounds.right}px ${window.innerHeight - bounds.bottom}px ${bounds.left}px round ${borderRadius})`
+    ? `inset(${bounds.top}px ${(typeof window !== "undefined" ? window.innerWidth : 0) - bounds.right}px ${(typeof window !== "undefined" ? window.innerHeight : 0) - bounds.bottom}px ${bounds.left}px round ${borderRadius})`
     : "none"
 
   const glowRadius = bounds

@@ -2,7 +2,7 @@ export const WORKS = [
   {
     href: "/work/fm",
     imageSrc: "/img/fm/封面.png",
-    title: "人事一体化白板",
+    title: "人事系统",
     keywords: "人事管理 / 企业协同 / AI",
     year: "2026",
   },
@@ -22,4 +22,11 @@ export const WORKS = [
   },
   { href: "/work/hoyowave", imageSrc: "/img/HoYoWave/封面.png" as string | undefined, title: "HoYoWave", keywords: "企业协作 / IM / AI / 开放平台", year: "2023 – 2025" },
   { href: "/work/component-checker", imageSrc: "/img/CC/封面.png" as string | undefined, title: "Component Checker", keywords: "设计规范 / Figma 插件 / AI / 提效工具", year: "2024 – 2025" },
+  {
+    href: "/work/meitu-pro",
+    imageSrc: "/img/meitu-pro/封面.png",
+    title: "美图秀秀 Pro",
+    keywords: "图片编辑 / 桌面端 / 设计系统 / 三端统一",
+    year: "2022",
+  },
 ]

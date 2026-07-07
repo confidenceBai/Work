@@ -7,9 +7,10 @@ import OtherProjects from "@/components/other-projects"
 import Divider from "@/components/divider"
 import { colors, styles } from "@/lib/design-tokens"
 
-const SHAPES_ICON_URL = "/img/shapes-icon.png"
-
 const COVER_IMAGE = "/img/CC/封面.png"
+const CHECK_ICON_IMAGE = "/img/CC/check-icon.jpeg"
+const CHECK_DESCRIPTION_IMAGE = "/img/CC/check-desription.png"
+const COMPONENT_IMAGE = "/img/CC/component.jpeg"
 
 const labelStyle: React.CSSProperties = {
   margin: 0,
@@ -22,18 +23,6 @@ const bodyStyle: React.CSSProperties = {
   width: "100%",
 }
 
-const placeholderBox: React.CSSProperties = {
-  width: "100%",
-  aspectRatio: "16 / 9",
-  borderRadius: 12,
-  border: `1px dashed ${colors.dark[50]}`,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexDirection: "column",
-  gap: 8,
-  backgroundColor: colors.dark[900],
-}
 
 const chevronDivider = (
   <div
@@ -100,36 +89,6 @@ export default function WorkComponentCheckerPage() {
         overflow: "clip",
       }}
     >
-      {/* Decorative shapes icon */}
-      <div
-        style={{
-          position: "absolute",
-          width: 484,
-          height: 491,
-          top: -137,
-          right: -137,
-          overflow: "clip",
-          zIndex: 4,
-          pointerEvents: "none",
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={SHAPES_ICON_URL}
-          alt=""
-          style={{
-            position: "absolute",
-            height: 533,
-            aspectRatio: "1",
-            right: -29,
-            bottom: -28,
-            left: -20,
-            transform: "rotate(20deg)",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
       <div
         className="case-study-wrapper"
         style={{
@@ -150,7 +109,7 @@ export default function WorkComponentCheckerPage() {
             flexDirection: "column",
             alignItems: "center",
             gap: 56,
-            padding: "176px 40px",
+            padding: "120px 40px",
           }}
         >
           {/* ═══ Card 1: Header ═══ */}
@@ -185,7 +144,7 @@ export default function WorkComponentCheckerPage() {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <p className="text-body-medium" style={{ ...labelStyle, width: "100%" }}>{"项目年份"}</p>
-                <p className="text-body" style={bodyStyle}>{"2024 – 2025"}</p>
+                <p className="text-body" style={bodyStyle}>{"2025 – 2026"}</p>
               </div>
             </div>
           </article>
@@ -195,7 +154,7 @@ export default function WorkComponentCheckerPage() {
             className="case-study-card"
             style={{
               ...styles.card,
-              maxWidth: 1000,
+              maxWidth: 820,
               padding: 24,
               display: "flex",
               flexDirection: "column",
@@ -222,14 +181,14 @@ export default function WorkComponentCheckerPage() {
               <p className="text-body" style={styles.featureDesc}>
                 {"每新增一个 icon，都要逐一校验命名、图层数量、约束设置、填充规则等 6 项细节。"}
                 <HighlightText>任何一个参数没设对，后续调用就会出问题</HighlightText>
-                {"；上传到 iconfont 时甚至会直接报错。"}
+                {"；上传到 iconfont 时甚至会出现前端无法正常渲染的问题。"}
               </p>
             </div>
 
             <div style={styles.featureRow}>
               <p className="text-body-medium" style={styles.featureTitle}>{"检索效率"}</p>
               <p className="text-body" style={styles.featureDesc}>
-                {"300+ icon 存在组件库中，设计师调用时要在茫茫 icon 海里逐个翻找。没有语义描述，"}
+                {"500+ icon 存在组件库中，设计师调用时要在茫茫 icon 海里逐个翻找。没有语义描述，"}
                 <HighlightText>只能靠名字猜，效率十分低下</HighlightText>
                 {"。"}
               </p>
@@ -257,12 +216,12 @@ export default function WorkComponentCheckerPage() {
               </p>
             </div>
 
-            {/* 规范检查截图占位 */}
-            <div role="img" aria-label="规范检查界面截图" style={placeholderBox}>
-              <p style={{ margin: 0, fontSize: 14, color: colors.neutral[500], fontWeight: 500 }}>
-                {"规范检查界面截图（待补充）"}
-              </p>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={CHECK_ICON_IMAGE}
+              alt="规范检查界面截图"
+              style={{ width: "100%", height: "auto", borderRadius: 12 }}
+            />
 
             <div style={styles.featureRow}>
               <p className="text-body-medium" style={styles.featureTitle}>{"AI 描述"}</p>
@@ -273,12 +232,12 @@ export default function WorkComponentCheckerPage() {
               </p>
             </div>
 
-            {/* AI 描述截图占位 */}
-            <div role="img" aria-label="AI 描述结果截图" style={placeholderBox}>
-              <p style={{ margin: 0, fontSize: 14, color: colors.neutral[500], fontWeight: 500 }}>
-                {"AI 描述结果截图（待补充）"}
-              </p>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={CHECK_DESCRIPTION_IMAGE}
+              alt="AI 描述结果截图"
+              style={{ width: "100%", height: "auto", borderRadius: 12 }}
+            />
 
             {chevronDivider}
 
@@ -301,12 +260,12 @@ export default function WorkComponentCheckerPage() {
 
             <WhatStepSection steps={WHAT_STEPS} />
 
-            {/* 规范帧截图占位 */}
-            <div role="img" aria-label="生成的规范帧截图" style={placeholderBox}>
-              <p style={{ margin: 0, fontSize: 14, color: colors.neutral[500], fontWeight: 500 }}>
-                {"规范帧截图（待补充）"}
-              </p>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={COMPONENT_IMAGE}
+              alt="生成的规范帧截图"
+              style={{ width: "100%", height: "auto", borderRadius: 12 }}
+            />
 
             <Divider />
 
@@ -327,7 +286,7 @@ export default function WorkComponentCheckerPage() {
             <div style={styles.featureRow}>
               <p className="text-body-medium" style={styles.featureTitle}>{"语义检索"}</p>
               <p className="text-body" style={styles.featureDesc}>
-                {"300+ icon 从靠名字猜，"}
+                {"500+ icon 从靠名字猜，"}
                 <HighlightText>变成通过语义关键词模糊检索</HighlightText>
                 {"。"}
               </p>
@@ -337,7 +296,7 @@ export default function WorkComponentCheckerPage() {
               <p className="text-body-medium" style={styles.featureTitle}>{"规范提效"}</p>
               <p className="text-body" style={styles.featureDesc}>
                 {"一份组件规范从参考各大组件库写 2-3 天，"}
-                <HighlightText>变成 AI 生成半天搞定</HighlightText>
+                <HighlightText>变成 AI 生成0.5d搞定</HighlightText>
                 {"。"}
               </p>
             </div>
@@ -346,7 +305,7 @@ export default function WorkComponentCheckerPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               <div style={{ ...styles.subCard, padding: 16, textAlign: "center" }}>
                 <p style={{ margin: 0, fontSize: 36, fontWeight: 600, color: colors.neutral[50], lineHeight: 1.2 }}>
-                  {"300+"}
+                  {"500+"}
                 </p>
                 <p style={{ margin: "4px 0 0", fontSize: 14, color: colors.neutral[400] }}>
                   {"icon 校验"}
@@ -362,7 +321,7 @@ export default function WorkComponentCheckerPage() {
               </div>
               <div style={{ ...styles.subCard, padding: 16, textAlign: "center" }}>
                 <p style={{ margin: 0, fontSize: 36, fontWeight: 600, color: colors.neutral[50], lineHeight: 1.2 }}>
-                  {"半天"}
+                  {"0.5d"}
                 </p>
                 <p style={{ margin: "4px 0 0", fontSize: 14, color: colors.neutral[400] }}>
                   {"规范生成（原 2-3 天）"}

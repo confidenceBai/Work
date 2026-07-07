@@ -1,0 +1,45 @@
+{
+  "envId": "zoebai-d7g4qcm7z36c047f9",
+  "functionRoot": "./cloudfunctions",
+  "functions": [
+    {
+      "name": "ai-chat",
+      "handler": "index.main",
+      "runtime": "Nodejs18.15",
+      "timeout": 300,
+      "installDependency": true,
+      "envVariables": {
+        "MIMO_API_KEY": "tp-ccl9kxb5fwyst0sfr7726poo1hndb0bp0n0y8t8szina9w4j"
+      }
+    }
+  ],
+  "framework": {
+    "name": "portfolio",
+    "plugins": {
+      "client": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "outputPath": "./out"
+        }
+      },
+      "server": {
+        "use": "@cloudbase/framework-plugin-function",
+        "inputs": {
+          "functionRootPath": "./cloudfunctions",
+          "functions": [
+            {
+              "name": "ai-chat",
+              "handler": "index.main",
+              "runtime": "Nodejs18.15",
+              "installDependency": true,
+              "timeout": 300,
+              "envVariables": {
+                "MIMO_API_KEY": "tp-ccl9kxb5fwyst0sfr7726poo1hndb0bp0n0y8t8szina9w4j"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
